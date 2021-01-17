@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   )
 
 find_package(ProtoBuf REQUIRED)
-find_package(OpenCV 3 REQUIRED)
+find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 catkin_package()

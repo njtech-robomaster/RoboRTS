@@ -59,10 +59,10 @@ int main(int argc, char** argv)
   VideoCapture video(0);
   int img_width = 640;
   int img_height = 480;
-  video.set(CV_CAP_PROP_FRAME_WIDTH,img_width);
-  video.set(CV_CAP_PROP_FRAME_HEIGHT,img_height);
-  img_width = video.get(CV_CAP_PROP_FRAME_WIDTH);
-  img_height = video.get(CV_CAP_PROP_FRAME_HEIGHT);
+  video.set(cv::CAP_PROP_FRAME_WIDTH,img_width);
+  video.set(cv::CAP_PROP_FRAME_HEIGHT,img_height);
+  img_width = video.get(cv::CAP_PROP_FRAME_WIDTH);
+  img_height = video.get(cv::CAP_PROP_FRAME_HEIGHT);
 
   if (!video.isOpened()) {
     cout << "cannot read video!" << endl;

@@ -28,14 +28,14 @@ void TrackingUtility::mouseCallback(int event, int x, int y, int f, void *p)
 
   switch(event)
   {
-    case  CV_EVENT_LBUTTONDOWN  :
+    case  cv::EVENT_LBUTTONDOWN  :
       u->mouseClicked = true;
       u->roiSelected = false;
       u->P1 = cv::Point(x,y);
       u->P2 = cv::Point(x,y);
       break;
 
-    case  CV_EVENT_LBUTTONUP    :
+    case  cv::EVENT_LBUTTONUP    :
       u->P2 = cv::Point(x,y);
       u->mouseClicked=false;
       if(u->P2 != u->P1)
@@ -44,7 +44,7 @@ void TrackingUtility::mouseCallback(int event, int x, int y, int f, void *p)
       }
       break;
 
-    case  CV_EVENT_MOUSEMOVE    :
+    case  cv::EVENT_MOUSEMOVE    :
       if(u->mouseClicked)
       {
         u->P2 = cv::Point(x,y);
