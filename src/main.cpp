@@ -82,7 +82,7 @@ void send_result(SerialPort &serial, const DetectResult &result) {
 
 int main() {
 	// Initialize serial port
-	SerialPort serial{"/dev/ttyACM0"};
+	SerialPort serial{env("RM_SERIAL", "/dev/ttyACM0")};
 
 	// Open camera
 	cv::VideoCapture cap{std::stoi(env("RM_CAMERA", "0"))};
