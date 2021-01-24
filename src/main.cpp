@@ -9,14 +9,14 @@
 
 class DetectResult {
   public:
-	float center_x = NAN;
-	float center_y = NAN;
-	float t_x = NAN;
-	float t_y = NAN;
-	float t_z = NAN;
-	float r_x = NAN;
-	float r_y = NAN;
-	float r_z = NAN;
+	int16_t center_x = -1;
+	int16_t center_y = -1;
+	int16_t t_x = -1;
+	int16_t t_y = -1;
+	int16_t t_z = -1;
+	int16_t r_x = -1;
+	int16_t r_y = -1;
+	int16_t r_z = -1;
 };
 
 #ifdef DEBUG
@@ -44,28 +44,23 @@ std::string env(const std::string &var, const std::string &default_value) {
 	return val == nullptr ? default_value : val;
 }
 
-void put_float_be(char *&ptr, const float &val) {
-	static_assert(sizeof(float) == sizeof(uint32_t));
-	uint32_t fbits;
-	memcpy(&fbits, &val, sizeof(float));
-	ptr[0] = (char)((fbits >> 24) & 0xff);
-	ptr[1] = (char)((fbits >> 16) & 0xff);
-	ptr[2] = (char)((fbits >> 8) & 0xff);
-	ptr[3] = (char)((fbits >> 0) & 0xff);
-	ptr += 4;
+void put_int16_be(char *&ptr, const int16_t &val) {
+	ptr[0] = (char)((val >> 8) & 0xff);
+	ptr[1] = (char)((val >> 0) & 0xff);
+	ptr += 2;
 }
 void send_result(SerialPort &serial, const DetectResult &result) {
-	static char buf[34];
+	static char buf[18];
 	char *ptr = buf;
 	*(ptr++) = 0x22;
-	put_float_be(ptr, result.center_x);
-	put_float_be(ptr, result.center_y);
-	put_float_be(ptr, result.t_x);
-	put_float_be(ptr, result.t_y);
-	put_float_be(ptr, result.t_z);
-	put_float_be(ptr, result.r_x);
-	put_float_be(ptr, result.r_y);
-	put_float_be(ptr, result.r_z);
+	put_int16_be(ptr, result.center_x);
+	put_int16_be(ptr, result.center_y);
+	put_int16_be(ptr, result.t_x);
+	put_int16_be(ptr, result.t_y);
+	put_int16_be(ptr, result.t_z);
+	put_int16_be(ptr, result.r_x);
+	put_int16_be(ptr, result.r_y);
+	put_int16_be(ptr, result.r_z);
 	*(ptr++) = 0x33;
 
 #ifdef DEBUG
@@ -123,16 +118,16 @@ int main() {
 			std::vector<cv::Point2f> vertex = armor_detector.getArmorVertex();
 			int armor_type = armor_detector.getArmorType();
 
-			result.center_x = 0;
-			result.center_y = 0;
+			int center_x = 0;
+			int center_y = 0;
 			for (auto &p : vertex) {
-				result.center_x += p.x;
-				result.center_y += p.y;
+				center_x += p.x;
+				center_y += p.y;
 			}
-			result.center_x /= 4;
-			result.center_x /= frame_width;
-			result.center_y /= 4;
-			result.center_y /= frame_height;
+			result.center_x = (((double)center_x) / 4 / frame_width) *
+			                  std::numeric_limits<int16_t>::max();
+			result.center_y = (((double)center_y) / 4 / frame_height) *
+			                  std::numeric_limits<int16_t>::max();
 
 #ifdef DEBUG
 			std::vector<cv::Point> quad_points;

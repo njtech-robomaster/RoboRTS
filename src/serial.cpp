@@ -5,7 +5,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#define BAUD_RATE B1152000
+#define BAUD_RATE B115200
 
 SerialPort::SerialPort(const std::string &tty_path) {
 	fd = open(tty_path.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
