@@ -37,6 +37,18 @@ std::string to_detect_result(int result) {
 		assert(false);
 	}
 }
+std::string to_armor_type(int type) {
+	switch (type) {
+	case rm::UNKNOWN_ARMOR:
+		return "unknown";
+	case rm::SMALL_ARMOR:
+		return "small";
+	case rm::BIG_ARMOR:
+		return "big";
+	default:
+		assert(false);
+	}
+}
 #endif
 
 std::string env(const std::string &var, const std::string &default_value) {
@@ -101,6 +113,7 @@ int main() {
 	while (true) {
 
 #ifdef DEBUG
+		std::cerr << "----\n";
 		auto t0 = std::chrono::high_resolution_clock::now();
 #endif
 
@@ -135,7 +148,17 @@ int main() {
 				quad_points.push_back(p);
 			}
 			cv::polylines(frame, quad_points, true, cv::Scalar(255, 255, 0));
-			std::cerr << "armor_type: " << armor_type << std::endl;
+			std::cerr
+			          << "armor_type: " << to_armor_type(armor_type) << "\n"
+			          << "vertex0: (" << vertex[0].x << ", " << vertex[0].y
+			          << ")\n"
+			          << "vertex1: (" << vertex[1].x << ", " << vertex[1].y
+			          << ")\n"
+			          << "vertex2: (" << vertex[2].x << ", " << vertex[2].y
+			          << ")\n"
+			          << "vertex3: (" << vertex[3].x << ", " << vertex[3].y
+			          << ")\n";
+
 #endif
 		}
 
