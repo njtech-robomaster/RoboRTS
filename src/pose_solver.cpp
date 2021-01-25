@@ -10,10 +10,10 @@ const std::vector<cv::Point3f> OBJECT_POINTS_ARMOR_BIG = {
 };
 
 const std::vector<cv::Point3f> OBJECT_POINTS_ARMOR_SMALL = {
-    {-60, -68, 0}, // top-left
-    {60, -68, 0},  // top-right
-    {60, 68, 0},   // bottom-right
-    {-60, 68, 0}   // bottom-left
+    {-58, -68, 0}, // top-left
+    {58, -68, 0},  // top-right
+    {58, 68, 0},   // bottom-right
+    {-58, 68, 0}   // bottom-left
 };
 
 /*

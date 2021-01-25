@@ -5,8 +5,8 @@
 		<cols>3</cols>
 		<dt>d</dt>
 		<data>
-			923.9376 0 525.9291
-			0 924.7493 362.2456
+			1289.3 0 1014.2
+			0 1289.1 518.6
 			0 0 1
 		</data>
 	</camera_intrinsic>
@@ -15,11 +15,11 @@
 		<cols>1</cols>
 		<dt>d</dt>
 		<data>
-			0.016
-			0.1937
-			-0.0056
-			-0.0013
-			-0.5449
+			0.0336
+			0.0289
+			-0.0026
+			0.0127
+			-0.2803
 		</data>
 	</distortion_coefficients>
 </opencv_storage>

@@ -10,14 +10,14 @@
 
 class DetectResult {
   public:
-	int16_t center_x = -1;
-	int16_t center_y = -1;
-	int16_t t_x = -1;
-	int16_t t_y = -1;
-	int16_t t_z = -1;
-	int16_t r_x = -1;
-	int16_t r_y = -1;
-	int16_t r_z = -1;
+	int16_t center_x = -1; // 目标在图像中的 x 坐标; -1 未检测到目标, [0,32767] 对应分数坐标 [0,1]
+	int16_t center_y = -1; // 目标在图像中的 y 坐标; 同上
+	int16_t t_x = -1;      // 目标 x 坐标 (mm), x 轴向右
+	int16_t t_y = -1;      // 目标 y 坐标 (mm), y 轴向下
+	int16_t t_z = -1;      // 目标 z 坐标 (mm), z 轴向前
+	int16_t r_x = -1;      // 目标旋转向量 x 分量, 暂时为 -1
+	int16_t r_y = -1;      // 目标旋转向量 y 分量, 暂时为 -1
+	int16_t r_z = -1;      // 目标旋转向量 z 分量, 暂时为 -1
 };
 
 #ifdef DEBUG
@@ -155,8 +155,14 @@ int main() {
 			if (pose_solver_enabled) {
 				pose = pose_solver.solve(vertex, armor_type);
 			}
+			result.t_x = std::round(pose.t_x);
+			result.t_y = std::round(pose.t_y);
+			result.t_z = std::round(pose.t_z);
 
 #ifdef DEBUG
+			double distance = std::sqrt(pose.t_x * pose.t_x + pose.t_y * pose.t_y + pose.t_z * pose.t_z);
+			double pitch = std::atan2(pose.t_y, pose.t_z);
+			double yaw = std::atan2(pose.t_x, pose.t_z);
 			std::vector<cv::Point> quad_points;
 			for (auto &p : vertex) {
 				quad_points.push_back(p);
@@ -170,7 +176,9 @@ int main() {
 			          << "vertex3: (" << vertex[3].x << ", " << vertex[3].y << ")\n"
 					  << "t_vec: [" << pose.t_x << ", "<< pose.t_y << ", "<< pose.t_z << "]\n"
 					  << "r_vec: [" << pose.r_x << ", "<< pose.r_y << ", "<< pose.r_z << "]\n"
-					  << "distance: " << std::sqrt(pose.t_x*pose.t_x+pose.t_y*pose.t_y+pose.t_z*pose.t_z);
+					  << "distance: " << distance << "\n"
+					  << "pitch: " << (pitch * 180) << "\n"
+					  << "yaw: "<< (yaw * 180) << "\n";
 			// clang-format on
 
 #endif
