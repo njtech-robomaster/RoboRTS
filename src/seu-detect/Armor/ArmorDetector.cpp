@@ -91,7 +91,7 @@ ArmorDescriptor::ArmorDescriptor() {
 
 ArmorDescriptor::ArmorDescriptor(const LightDescriptor &lLight,
                                  const LightDescriptor &rLight,
-                                 const int armorType, const cv::Mat &grayImg,
+                                 const ObjectType armorType, const cv::Mat &grayImg,
                                  float rotaScore, ArmorParam _param) {
 	// handle two lights
 	lightPairs[0] = lLight.rec();
@@ -213,7 +213,7 @@ void ArmorDetector::loadImg(const cv::Mat &srcImg) {
 #endif // DEBUG_DETECTION
 }
 
-int ArmorDetector::detect() {
+ArmorDetector::ArmorFlag ArmorDetector::detect() {
 	/*
 	 *	Detect lights and build light bars' desciptors
 	 */
@@ -378,7 +378,7 @@ int ArmorDetector::detect() {
 				}
 
 				// calculate pairs' info
-				int armorType = ratio > _param.armor_big_armor_ratio
+				ObjectType armorType = ratio > _param.armor_big_armor_ratio
 				                    ? BIG_ARMOR
 				                    : SMALL_ARMOR;
 				// calculate the rotation score
@@ -519,7 +519,7 @@ const std::vector<cv::Point2f> ArmorDetector::getArmorVertex() const {
 	return realVertex;
 }
 
-int ArmorDetector::getArmorType() const {
+ObjectType ArmorDetector::getArmorType() const {
 	return _targetArmor.type;
 }
 

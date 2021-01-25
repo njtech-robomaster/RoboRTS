@@ -182,7 +182,7 @@ class ArmorDescriptor {
 	ArmorDescriptor::getFrontImg()
 	*/
 	ArmorDescriptor(const LightDescriptor &lLight,
-	                const LightDescriptor &rLight, const int armorType,
+	                const LightDescriptor &rLight, const ObjectType armorType,
 	                const cv::Mat &srcImg, const float rotationScore,
 	                ArmorParam param);
 
@@ -226,10 +226,7 @@ class ArmorDescriptor {
 	cv::Mat frontImg; // front img after prespective transformation from
 	                  // vertex,1 channel gray img
 
-	//	0 -> small
-	//	1 -> big
-	//	-1 -> unkown
-	int type;
+	ObjectType type;
 };
 
 /*
@@ -281,7 +278,7 @@ class ArmorDetector {
 	 *	@Return: See enum ArmorFlag
 	 *	@Others: API for client
 	 */
-	int detect();
+	ArmorFlag detect();
 
 	/*
 	 *	@Brief: get the vertex of armor
@@ -296,7 +293,7 @@ class ArmorDetector {
 	 *	@Return: 0 for small armor, 1 for big armor
 	 *	@Others: API for client
 	 */
-	int getArmorType() const;
+	ObjectType getArmorType() const;
 
 #if defined(DEBUG_DETECTION) || defined(SHOW_RESULT)
 	void showDebugImg() const;
@@ -319,7 +316,7 @@ class ArmorDetector {
 
 	ArmorDescriptor _targetArmor; // relative coordinates
 
-	int _flag;
+	ArmorFlag _flag;
 	bool _isTracking;
 
 #if defined(DEBUG_DETECTION) || defined(SHOW_RESULT)

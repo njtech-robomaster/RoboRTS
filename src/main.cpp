@@ -1,3 +1,4 @@
+#include "pose_solver.h"
 #include "serial.h"
 #include "seu-detect/Armor/ArmorDetector.h"
 #include <chrono>
@@ -23,7 +24,7 @@ class DetectResult {
 double to_ms(std::chrono::duration<double, std::milli> t) {
 	return t.count();
 }
-std::string to_detect_result(int result) {
+std::string to_detect_result(rm::ArmorDetector::ArmorFlag result) {
 	switch (result) {
 	case rm::ArmorDetector::ARMOR_NO:
 		return "none";
@@ -37,7 +38,7 @@ std::string to_detect_result(int result) {
 		assert(false);
 	}
 }
-std::string to_armor_type(int type) {
+std::string to_armor_type(rm::ObjectType type) {
 	switch (type) {
 	case rm::UNKNOWN_ARMOR:
 		return "unknown";
@@ -89,7 +90,7 @@ void send_result(SerialPort &serial, const DetectResult &result) {
 
 int main() {
 	// Initialize serial port
-	SerialPort serial{env("RM_SERIAL", "/dev/ttyACM0")};
+	SerialPort serial{env("RM_SERIAL", "/dev/null")};
 
 	// Open camera
 	cv::VideoCapture cap{std::stoi(env("RM_CAMERA", "0"))};
@@ -109,6 +110,14 @@ int main() {
 	armor_detector.setEnemyColor(
 	    rm::BLUE); // TODO Retrive color from serial port
 
+	// Initialize pose solver
+	PoseSolver pose_solver;
+	std::string pose_param_file = env("RM_POSE_PARAM", "");
+	bool pose_solver_enabled = pose_param_file != "";
+	if (pose_solver_enabled) {
+		pose_solver.load_parameters(pose_param_file);
+	}
+
 	cv::Mat frame;
 	while (true) {
 
@@ -125,11 +134,11 @@ int main() {
 
 		DetectResult result;
 		armor_detector.loadImg(frame);
-		int detect_result = armor_detector.detect();
+		rm::ArmorDetector::ArmorFlag detect_result = armor_detector.detect();
 		if (detect_result == rm::ArmorDetector::ARMOR_LOCAL ||
 		    detect_result == rm::ArmorDetector::ARMOR_LOCAL) {
 			std::vector<cv::Point2f> vertex = armor_detector.getArmorVertex();
-			int armor_type = armor_detector.getArmorType();
+			rm::ObjectType armor_type = armor_detector.getArmorType();
 
 			int center_x = 0;
 			int center_y = 0;
@@ -142,22 +151,27 @@ int main() {
 			result.center_y = (((double)center_y) / 4 / frame_height) *
 			                  std::numeric_limits<int16_t>::max();
 
+			PoseInfo pose;
+			if (pose_solver_enabled) {
+				pose = pose_solver.solve(vertex, armor_type);
+			}
+
 #ifdef DEBUG
 			std::vector<cv::Point> quad_points;
 			for (auto &p : vertex) {
 				quad_points.push_back(p);
 			}
 			cv::polylines(frame, quad_points, true, cv::Scalar(255, 255, 0));
-			std::cerr
-			          << "armor_type: " << to_armor_type(armor_type) << "\n"
-			          << "vertex0: (" << vertex[0].x << ", " << vertex[0].y
-			          << ")\n"
-			          << "vertex1: (" << vertex[1].x << ", " << vertex[1].y
-			          << ")\n"
-			          << "vertex2: (" << vertex[2].x << ", " << vertex[2].y
-			          << ")\n"
-			          << "vertex3: (" << vertex[3].x << ", " << vertex[3].y
-			          << ")\n";
+			// clang-format off
+			std::cerr << "armor_type: " << to_armor_type(armor_type) << "\n"
+			          << "vertex0: (" << vertex[0].x << ", " << vertex[0].y << ")\n"
+			          << "vertex1: (" << vertex[1].x << ", " << vertex[1].y << ")\n"
+			          << "vertex2: (" << vertex[2].x << ", " << vertex[2].y << ")\n"
+			          << "vertex3: (" << vertex[3].x << ", " << vertex[3].y << ")\n"
+					  << "t_vec: [" << pose.t_x << ", "<< pose.t_y << ", "<< pose.t_z << "]\n"
+					  << "r_vec: [" << pose.r_x << ", "<< pose.r_y << ", "<< pose.r_z << "]\n"
+					  << "distance: " << std::sqrt(pose.t_x*pose.t_x+pose.t_y*pose.t_y+pose.t_z*pose.t_z);
+			// clang-format on
 
 #endif
 		}
