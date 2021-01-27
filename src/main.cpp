@@ -3,6 +3,7 @@
 #include "seu-detect/Armor/ArmorDetector.h"
 #include <chrono>
 #include <cmath>
+#include <filesystem>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
@@ -10,7 +11,8 @@
 
 class DetectResult {
   public:
-	int16_t center_x = -1; // 目标在图像中的 x 坐标; -1 未检测到目标, [0,32767] 对应分数坐标 [0,1]
+	int16_t center_x = -1; // 目标在图像中的 x 坐标; -1 未检测到目标, [0,32767]
+	                       // 对应分数坐标 [0,1]
 	int16_t center_y = -1; // 目标在图像中的 y 坐标; 同上
 	int16_t t_x = -1;      // 目标 x 坐标 (mm), x 轴向右
 	int16_t t_y = -1;      // 目标 y 坐标 (mm), y 轴向下
@@ -115,6 +117,10 @@ int main() {
 	std::string pose_param_file = env("RM_POSE_PARAM", "");
 	bool pose_solver_enabled = pose_param_file != "";
 	if (pose_solver_enabled) {
+		if (std::filesystem::is_directory(pose_param_file)) {
+			pose_param_file += "/" + std::to_string(frame_width) + "x" +
+			                   std::to_string(frame_height) + ".xml";
+		}
 		pose_solver.load_parameters(pose_param_file);
 	}
 
@@ -160,7 +166,9 @@ int main() {
 			result.t_z = std::round(pose.t_z);
 
 #ifdef DEBUG
-			double distance = std::sqrt(pose.t_x * pose.t_x + pose.t_y * pose.t_y + pose.t_z * pose.t_z);
+			double distance =
+			    std::sqrt(pose.t_x * pose.t_x + pose.t_y * pose.t_y +
+			              pose.t_z * pose.t_z);
 			double pitch = std::atan2(pose.t_y, pose.t_z);
 			double yaw = std::atan2(pose.t_x, pose.t_z);
 			std::vector<cv::Point> quad_points;
