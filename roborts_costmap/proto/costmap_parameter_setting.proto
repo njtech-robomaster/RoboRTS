@@ -20,8 +20,12 @@ message ParaCostmapInterface {
     required bool   is_rolling_window = 12;
     required bool   has_obstacle_layer = 13;
     required bool   has_static_layer = 14;
-    required string inflation_file_path = 15;
-    required double map_update_frequency = 16;
+    required bool   has_local_static_layer = 15;
+    required bool   has_dynamic_obstacle_layer = 16;
+    required bool   has_friend_layer = 17;
+    required bool   has_detection_layer = 18;
+    required string inflation_file_path = 19;
+    required double map_update_frequency = 20;
 }
 message Point {
     required double x = 1;

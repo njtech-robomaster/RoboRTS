@@ -28,13 +28,13 @@ struct LocalizationConfig {
       nh->param<std::string>("odom_frame", odom_frame_id, "odom");
       nh->param<std::string>("base_frame", base_frame_id, "base_link");
       nh->param<std::string>("global_frame", global_frame_id, "map");
-      nh->param<std::string>("laser_topic_name", laser_topic_name, "scan");
+      nh->param<std::string>("laser_topic_name", laser_topic_name, "base_scan");
       nh->param<std::string>("map_topic_name", map_topic_name, "map");
       nh->param<std::string>("init_pose_topic_name", init_pose_topic_name, "initialpose");
       nh->param<double>("transform_tolerance", transform_tolerance, 0.1);
-      nh->param<double>("initial_pose_x", initial_pose_x, 1);
-      nh->param<double>("initial_pose_y", initial_pose_y, 1);
-      nh->param<double>("initial_pose_a", initial_pose_a, 0);
+      nh->param<double>("initial_pose_x", initial_pose_x, 0.5);
+      nh->param<double>("initial_pose_y", initial_pose_y, 0.5);
+      nh->param<double>("initial_pose_a", initial_pose_a, 1.57);
       nh->param<double>("initial_cov_xx", initial_cov_xx, 0.1);
       nh->param<double>("initial_cov_yy", initial_cov_yy, 0.1);
       nh->param<double>("initial_cov_aa", initial_cov_aa, 0.1);

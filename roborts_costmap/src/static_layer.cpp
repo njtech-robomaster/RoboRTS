@@ -217,7 +217,7 @@ void StaticLayer::UpdateCosts(Costmap2D& master_grid, int min_i, int min_j, int 
             master_grid.SetCost(i, j, GetCost(mx, my));
           }
           else {
-            master_grid.SetCost(i, j, std::max(master_grid.GetCost(i, j), GetCost(i, j)));
+            master_grid.SetCost(i, j, std::max(master_grid.GetCost(i, j), GetCost(mx, my)));
           }
         }
       }

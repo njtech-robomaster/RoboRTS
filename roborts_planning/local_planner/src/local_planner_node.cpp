@@ -23,18 +23,23 @@ namespace roborts_local_planner {
 
 using roborts_common::NodeState;
 LocalPlannerNode::LocalPlannerNode() :
-    local_planner_nh_("~"),
-    as_(local_planner_nh_, "/local_planner_node_action", boost::bind(&LocalPlannerNode::ExcuteCB, this, _1), false),
+    
+    as_(local_planner_nh_, "local_planner_node_action", boost::bind(&LocalPlannerNode::ExcuteCB, this, _1), false),
     initialized_(false), node_state_(roborts_common::NodeState::IDLE),
     node_error_info_(roborts_common::ErrorCode::OK), max_error_(5),
     local_cost_(nullptr), tf_(nullptr) {
+  
+  
   if (Init().IsOK()) {
     ROS_INFO("local planner initialize completed.");
   } else {
     ROS_WARN("local planner initialize failed.");
     SetNodeState(NodeState::FAILURE);
   }
+
+  
   as_.start();
+  
 }
 
 LocalPlannerNode::~LocalPlannerNode() {
@@ -46,20 +51,25 @@ roborts_common::ErrorInfo LocalPlannerNode::Init() {
   LocalAlgorithms local_algorithms;
   std::string full_path = ros::package::getPath("roborts_planning") + "/local_planner/config/local_planner.prototxt";
   roborts_common::ReadProtoFromTextFile(full_path.c_str(), &local_algorithms);
+
   if (&local_algorithms == nullptr) {
     return roborts_common::ErrorInfo(roborts_common::ErrorCode::LP_INITILIZATION_ERROR,
                                    "Cannot load local planner protobuf configuration file.");
   }
   selected_algorithm_ = local_algorithms.selected_algorithm();
+  
   frequency_ = local_algorithms.frequency();
   tf_ = std::make_shared<tf::TransformListener>(ros::Duration(10));
 
   std::string map_path = ros::package::getPath("roborts_costmap") + \
       "/config/costmap_parameter_config_for_local_plan.prototxt";
+  
   local_cost_ = std::make_shared<roborts_costmap::CostmapInterface>("local_costmap",
                                                                           *tf_,
                                                                           map_path.c_str());
+  
   local_planner_ = roborts_common::AlgorithmFactory<LocalPlannerBase>::CreateAlgorithm(selected_algorithm_);
+  
   if (local_planner_== nullptr) {
     ROS_ERROR("global planner algorithm instance can't be loaded");
     return roborts_common::ErrorInfo(roborts_common::ErrorCode::LP_INITILIZATION_ERROR,
@@ -69,14 +79,16 @@ roborts_common::ErrorInfo LocalPlannerNode::Init() {
   std::string name;
   visual_frame_ = local_cost_->GetGlobalFrameID();
   visual_ = LocalVisualizationPtr(new LocalVisualization(local_planner_nh_, visual_frame_));
-  vel_pub_ = local_planner_nh_.advertise<roborts_msgs::TwistAccel>("/cmd_vel_acc", 5);
+  vel_pub_ = local_planner_nh_.advertise<roborts_msgs::TwistAccel>("cmd_vel_acc", 5);
 
+  
   return roborts_common::ErrorInfo(roborts_common::ErrorCode::OK);
 }
 
 void LocalPlannerNode::ExcuteCB(const roborts_msgs::LocalPlannerGoal::ConstPtr &command) {
   roborts_common::ErrorInfo error_info = GetErrorInfo();
   NodeState node_state = GetNodeState();
+
 
   if (node_state == NodeState::FAILURE) {
     roborts_msgs::LocalPlannerFeedback feedback;

@@ -1,6 +1,6 @@
 define block model
 (	
-  size [0.4 0.4 1.2]
+  size [0.6 0.45 1.2]
   ranger_return 1
 )
 
@@ -28,13 +28,13 @@ define rplidar ranger
 
 define rmcar position
 (
-  size [0.6 0.45 0.460]
+  size [0.6 0.45 0.250]
   origin [0 0 0 0]
   gui_nose 1
   drive "omni"
   # frontcamera(pose [ 0 0 0 0 ])
   rplidar(pose [ 0 0 0 0 ])
-  odom_error [0.03 0.03 0.00 0.05]
+  # odom_error [0.03 0.03 0.00 0.05]
   # [ xmin xmax ymin ymax zmin zmax amin amax ]				
   velocity_bounds [-2 2 -2 2 -2 2 -90 90 ]					
   acceleration_bounds [-2 2 -2 2 -2 2 -90 90]
@@ -66,7 +66,8 @@ interval_real 50#83
 
 window
 ( 
-  size [ 745.000 448.000 ] 
+  #size [ 745.000 448.000 ]
+  size [ 800.000 500.000 ]
   rotate [ 0 0 ]
   scale 29 
 )
@@ -76,11 +77,19 @@ floorplan
 ( 
   name "RoboMaster Map"
   bitmap "../maps/icra2019.pgm"
-  size [8.15 5.15 1.000]
+  size [8.15 5.15 1.50]
   pose [4.075  2.575  0 0 ]
 )
 
 # throw in a robot
- rmcar(pose [ 1 1 0 0 ] name "rmcar0" color "blue" )
+ rmcar(pose [ 7.5 4.5 0 -90 ] name "robot_0" color "blue" block(pose [ 0 0 0 0 ] color "blue"))
+ rmcar(pose [ 0.5 4.5 0 -90 ] name "robot_1" color "blue" block(pose [ 0 0 0 0 ] color "blue"))
+
+ #rmcar(pose [0.5 0.5 0 90 ] name "opp1" color "red")
+ #rmcar(pose [7.5 0.5 0 90 ] name "opp2" color "red")
+
+
 # throw in a block for test
  block(pose [ 7.79 3.45 0 0.3 ] color "red"  )
+
+ block(pose [ 7.79 0.45 0 0.3 ] color "red"  )

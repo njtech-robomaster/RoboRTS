@@ -39,34 +39,46 @@ class ChaseBehavior {
 
     auto executor_state = Update();
 
-    auto robot_map_pose = blackboard_->GetRobotMapPose();
+    
     if (executor_state != BehaviorState::RUNNING) {
+      auto robot_map_pose = blackboard_->GetRobotMapPose();
 
       chase_buffer_[chase_count_++ % 2] = blackboard_->GetEnemy();
 
       chase_count_ = chase_count_ % 2;
 
-      auto dx = chase_buffer_[(chase_count_ + 2 - 1) % 2].pose.position.x - robot_map_pose.pose.position.x;
-      auto dy = chase_buffer_[(chase_count_ + 2 - 1) % 2].pose.position.y - robot_map_pose.pose.position.y;
-      auto yaw = std::atan2(dy, dx);
+      auto enemy_pose = chase_buffer_[(chase_count_ + 1) % 2];
 
-      if (std::sqrt(std::pow(dx, 2) + std::pow(dy, 2)) >= 1.0 && std::sqrt(std::pow(dx, 2) + std::pow(dy, 2)) <= 2.0) {
+      auto dx = enemy_pose.pose.position.x - robot_map_pose.pose.position.x;
+      auto dy = enemy_pose.pose.position.y - robot_map_pose.pose.position.y;
+      auto yaw = std::atan2(dy, dx);
+      geometry_msgs::PoseStamped toEnemy;
+      toEnemy.pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
+      
+
+      
+      if ( (std::sqrt(std::pow(dx, 2) + std::pow(dy, 2)) >= 1.0) 
+             && (std::sqrt(std::pow(dx, 2) + std::pow(dy, 2)) <= 2.0) 
+             && (blackboard_->GetAngle(robot_map_pose, toEnemy) <=blackboard_->threshold.near_angle) ) {
         if (cancel_goal_) {
           chassis_executor_->Cancel();
+          blackboard_->info.is_chase = false;
           cancel_goal_ = false;
         }
         return;
 
-      } else {
+      } 
+      else {
 
         auto orientation = tf::createQuaternionMsgFromYaw(yaw);
         geometry_msgs::PoseStamped reduce_goal;
-        reduce_goal.pose.orientation = robot_map_pose.pose.orientation;
+        // reduce_goal.pose.orientation = robot_map_pose.pose.orientation;
+        reduce_goal.pose.orientation = orientation;
 
         reduce_goal.header.frame_id = "map";
         reduce_goal.header.stamp = ros::Time::now();
-        reduce_goal.pose.position.x = chase_buffer_[(chase_count_ + 2 - 1) % 2].pose.position.x - 1.2 * cos(yaw);
-        reduce_goal.pose.position.y = chase_buffer_[(chase_count_ + 2 - 1) % 2].pose.position.y - 1.2 * sin(yaw);
+        reduce_goal.pose.position.x = enemy_pose.pose.position.x - 1.5 * cos(yaw);
+        reduce_goal.pose.position.y = enemy_pose.pose.position.y - 1.5 * sin(yaw);
         auto enemy_x = reduce_goal.pose.position.x;
         auto enemy_y = reduce_goal.pose.position.y;
         reduce_goal.pose.position.z = 1;
@@ -84,42 +96,58 @@ class ChaseBehavior {
           return;
         }
 
-        auto robot_x = robot_map_pose.pose.position.x;
-        auto robot_y = robot_map_pose.pose.position.y;
-        unsigned int robot_cell_x, robot_cell_y;
-        double goal_x, goal_y;
-        blackboard_->GetCostMap2D()->World2Map(robot_x,
-                                              robot_y,
-                                              robot_cell_x,
-                                              robot_cell_y);
+        // chase line iterator
+        if ( (blackboard_->GetCostMap2D()->GetCost(goal_cell_x, goal_cell_y) >= 253)
+           || (blackboard_->IsBombAllyGoal(reduce_goal)) ) {
 
-        if (blackboard_->GetCostMap2D()->GetCost(goal_cell_x, goal_cell_y) >= 253) {
+          auto robot_x = robot_map_pose.pose.position.x;
+          auto robot_y = robot_map_pose.pose.position.y;
+          unsigned int robot_cell_x, robot_cell_y;
+          double goal_x, goal_y;
+          blackboard_->GetCostMap2D()->World2Map(robot_x,
+                                                robot_y,
+                                                robot_cell_x,
+                                                robot_cell_y);
 
           bool find_goal = false;
-          for(FastLineIterator line( goal_cell_x, goal_cell_y, robot_cell_x, robot_cell_x); line.IsValid(); line.Advance()) {
+
+          for(FastLineIterator line( goal_cell_x, goal_cell_y, robot_cell_x, robot_cell_y); line.IsValid(); line.Advance()) {
 
             auto point_cost = blackboard_->GetCostMap2D()->GetCost((unsigned int) (line.GetX()), (unsigned int) (line.GetY())); //current point's cost
-
-            if(point_cost >= 253){
+            
+            blackboard_->GetCostMap2D()->Map2World((unsigned int) (line.GetX()),
+                                                    (unsigned int) (line.GetY()),
+                                                     goal_x,
+                                                     goal_y);
+           
+            if(point_cost >= 253 
+            || blackboard_->IsBombAllyGoal(goal_x, goal_y)
+            || blackboard_->GetEulerDistance(goal_x, goal_y, blackboard_->info.opp_reload.pose.position.x, blackboard_->info.opp_reload.pose.position.y) <= 1.0
+            || blackboard_->GetEulerDistance(goal_x, goal_y, blackboard_->info.opp_shield.pose.position.x, blackboard_->info.opp_shield.pose.position.y) <= 1.0){
               continue;
 
             } else {
               find_goal = true;
-              blackboard_->GetCostMap2D()->Map2World((unsigned int) (line.GetX()),
-                                                     (unsigned int) (line.GetY()),
-                                                     goal_x,
-                                                     goal_y);
-
               reduce_goal.pose.position.x = goal_x;
               reduce_goal.pose.position.y = goal_y;
               break;
             }
 
           }
+          
           if (find_goal) {
             cancel_goal_ = true;
+            dx = enemy_pose.pose.position.x - reduce_goal.pose.position.x;
+            dy = enemy_pose.pose.position.y - reduce_goal.pose.position.y;
+            yaw = std::atan2(dy, dx);
+            orientation = tf::createQuaternionMsgFromYaw(yaw);
+            reduce_goal.pose.orientation = orientation;
             chassis_executor_->Execute(reduce_goal);
+            blackboard_->SetMyGoal(reduce_goal);
+            blackboard_->info.is_chase = true;
+            
           } else {
+             blackboard_->info.is_chase = false;
             if (cancel_goal_) {
               chassis_executor_->Cancel();
               cancel_goal_ = false;
@@ -128,8 +156,10 @@ class ChaseBehavior {
           }
 
         } else {
-          cancel_goal_ = true;
-          chassis_executor_->Execute(reduce_goal);
+            cancel_goal_ = true;
+            chassis_executor_->Execute(reduce_goal);
+            blackboard_->SetMyGoal(reduce_goal);
+            blackboard_->info.is_chase = true;
         }
       }
     }

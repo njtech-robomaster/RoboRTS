@@ -176,6 +176,7 @@ void ObstacleLayer::UpdateBounds(double robot_x,
                                  double *min_y,
                                  double *max_x,
                                  double *max_y) {
+  ClearMap();
   if (rolling_window_) {
     UpdateOrigin(robot_x - GetSizeXWorld() / 2, robot_y - GetSizeYWorld() / 2);
   } else if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - reset_time_) > std::chrono::seconds(2)){
@@ -411,6 +412,19 @@ void ObstacleLayer::UpdateFootprint(double robot_x,
 
   for (size_t i = 0; i < transformed_footprint_.size(); i++) {
     Touch(transformed_footprint_[i].x, transformed_footprint_[i].y, min_x, min_y, max_x, max_y);
+  }
+}
+
+void ObstacleLayer::ClearMap() {
+  unsigned int x_size = GetSizeXCell();
+  unsigned int y_size = GetSizeYCell();
+  for (unsigned int mx = 0; mx < x_size; ++mx)
+  {
+    for (unsigned int my = 0; my < y_size; ++my)
+    {
+      unsigned int index = GetIndex(mx, my);
+      costmap_[index] = FREE_SPACE;
+    }
   }
 }
 

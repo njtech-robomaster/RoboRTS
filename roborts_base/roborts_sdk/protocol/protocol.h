@@ -229,22 +229,20 @@ class Protocol {
   bool SendResponse(const CommandInfo *command_info,
                     const MessageHeader *message_header,
                     void *message_data);
-  /**
-  * @brief An interface function for dispatch layer to send cmd with need for ack in the protocol layer
-  * @param command_info Input command information
-  * @param message_header Get message header
-  * @param message_data Input message data
-  * @return true if command is successfully allocated and sent by protocol layer
-  */
+   /**
+   * @brief An interface function for dispatch layer to send cmd with need for ack in the protocol layer
+   * @param command_info Input command information
+   * @param message_data Input message data
+   * @return true if command is successfully allocated and sent by protocol layer
+   */
   bool SendRequest(const CommandInfo *command_info,
-                   MessageHeader *message_header,
                    void *message_data);
-  /**
-  * @brief An interface function for dispatch layer to send cmd without need for ack in the protocol layer
-  * @param command_info Input command information
-  * @param message_data Input message data
-  * @return True if command is successfully allocated and sent by protocol layer
-  */
+   /**
+   * @brief An interface function for dispatch layer to send cmd without need for ack in the protocol layer
+   * @param command_info Input command information
+   * @param message_data Input message data
+   * @return True if command is successfully allocated and sent by protocol layer
+   */
   bool SendMessage(const CommandInfo *command_info,
                    void *message_data);
   /*************************** Send Pipline ***************************/
@@ -256,14 +254,13 @@ class Protocol {
    * @param data_ptr Pointer for the data head address
    * @param data_length Length of data
    * @param session_mode Session mode to distinguish whether the command need for ack
-   * @param message_header Return message header, if necessary
    * @param ack_timeout Timeout duration to check ack status in AutoRepeatSendCheck. Invalid if no need for ack
    * @param retry_time Retry time given to retry sending command in AutoRepeatSendCheck. Invalid if no need for ack
    * @return True if command is successfully allocated and sent
    */
   bool SendCMD(uint8_t cmd_set, uint8_t cmd_id, uint8_t receiver,
                void *data_ptr, uint16_t data_length,
-               CMDSessionMode session_mode, MessageHeader* message_header = nullptr,
+               CMDSessionMode session_mode,
                std::chrono::milliseconds ack_timeout = std::chrono::milliseconds(50), int retry_time = 5);
   /**
    * @brief Assign and send ack in the protocol layer
@@ -395,10 +392,10 @@ class Protocol {
    * @return Pointer of the ack session
    */
   ACKSession *AllocACKSession(uint8_t receiver, uint16_t session_id, uint16_t size);
-  /**
- * @brief Free the ack session
- * @param session Input the pointer of ack session to be freed
- */
+    /**
+   * @brief Free the ack session
+   * @param session Input the pointer of ack session to be freed
+   */
   void FreeACKSession(ACKSession *session);
 
   /******************* CRC Calculationns ***************************/
@@ -423,12 +420,12 @@ class Protocol {
    * @return CRC16
    */
   uint16_t CRC16Calc(const uint8_t *data_ptr, size_t length);
-  /**
- * @brief Calculate CRC32 with input data
- * @param data_ptr Input pointer of data head
- * @param length Input data length
- * @return CRC32
- */
+    /**
+   * @brief Calculate CRC32 with input data
+   * @param data_ptr Input pointer of data head
+   * @param length Input data length
+   * @return CRC32
+   */
   uint32_t CRC32Calc(const uint8_t *data_ptr, size_t length);
   /**
    * @brief Check if the calculated header CRC16 is same with CRC16 in the header
@@ -446,12 +443,10 @@ class Protocol {
   bool CRCTailCheck(uint8_t *data_ptr, size_t length);
   /******************* Const List ***************************/
 
-  //! rate of buffer reading
-  static const int    READING_RATE = 8000;
   //! size of receive buffer used to read from hardware device
-  static const size_t BUFFER_SIZE = 4096;
+  static const size_t BUFFER_SIZE = 1024;
   //! max Size of package
-  static const size_t MAX_PACK_SIZE = 4096;
+  static const size_t MAX_PACK_SIZE = 1024;
   //! session number for a sender/receiver
   static const size_t SESSION_TABLE_NUM = 32;
   //! length of header
@@ -514,8 +509,6 @@ class Protocol {
   std::thread send_poll_thread_;
   //! receive pool thread
   std::thread receive_pool_thread_;
-  //! mutex for map
-  std::mutex mutex_;
 };
 }
 #endif //ROBORTS_SDK_PROTOCOL_H

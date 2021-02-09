@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   roborts_common
   laser_geometry
   sensor_msgs
+  roborts_msgs
   geometry_msgs
   )
 

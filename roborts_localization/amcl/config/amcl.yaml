@@ -40,7 +40,7 @@ recovery_alpha_slow : 0.001
 recovery_alpha_fast : 0.1
 
 use_global_localization : false
-random_heading : true
+random_heading : false 
 laser_filter_weight : 0.4
 
 max_uwb_particles : 10

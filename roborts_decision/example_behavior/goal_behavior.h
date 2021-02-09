@@ -20,6 +20,7 @@ class GoalBehavior {
   void Run() {
     if(blackboard_->IsNewGoal()){
       chassis_executor_->Execute(blackboard_->GetGoal());
+      blackboard_->SetMyGoal(blackboard_->GetGoal());
     }
   }
 

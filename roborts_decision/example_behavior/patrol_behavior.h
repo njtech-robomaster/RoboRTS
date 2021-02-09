@@ -16,7 +16,8 @@ class PatrolBehavior {
   PatrolBehavior(ChassisExecutor* &chassis_executor,
                  Blackboard* &blackboard,
                  const std::string & proto_file_path) : chassis_executor_(chassis_executor),
-                                                        blackboard_(blackboard) {
+                                                        blackboard_(blackboard)
+                                                         {
 
     patrol_count_ = 0;
     point_size_ = 0;
@@ -28,21 +29,51 @@ class PatrolBehavior {
   }
 
   void Run() {
-
+    static int count = 0;
     auto executor_state = Update();
 
     std::cout << "state: " << (int)(executor_state) << std::endl;
 
     if (executor_state != BehaviorState::RUNNING) {
-
+      geometry_msgs::PoseStamped goal;
       if (patrol_goals_.empty()) {
         ROS_ERROR("patrol goal is empty");
         return;
       }
 
-      std::cout << "send goal" << std::endl;
-      chassis_executor_->Execute(patrol_goals_[patrol_count_]);
-      patrol_count_ = ++patrol_count_ % point_size_;
+      
+
+      // count = (count + 1)%2;
+      // if (count==0){
+      //   goal = blackboard_->info.my_reload;
+      // }
+      // else{
+      //   goal = blackboard_->info.my_shield;
+      // }
+      // auto goal = patrol_goals_[patrol_count_];
+      // patrol_count_ = ++patrol_count_ % point_size_;
+      
+      
+      
+      
+      // random select
+      // reload shield or patrol
+      std::uniform_int_distribution<int> sel(0, 1);
+      if (sel(generator)==0){
+         goal = blackboard_->info.my_shield;
+         
+      }
+      else{
+         std::uniform_int_distribution<int> dis(0, point_size_-1); 
+         int sel_i = dis(generator);
+         goal = patrol_goals_[sel_i];
+      }
+      
+      
+      if (!blackboard_->IsBombAllyGoal(goal)){
+         chassis_executor_->Execute(goal);
+         blackboard_->SetMyGoal(goal);
+      }
 
     }
   }
@@ -61,21 +92,16 @@ class PatrolBehavior {
       return false;
     }
 
-    point_size_ = (unsigned int)(decision_config.point().size());
+    point_size_ = (unsigned int)decision_config.blue().patrol().size();
     patrol_goals_.resize(point_size_);
     for (int i = 0; i != point_size_; i++) {
-      patrol_goals_[i].header.frame_id = "map";
-      patrol_goals_[i].pose.position.x = decision_config.point(i).x();
-      patrol_goals_[i].pose.position.y = decision_config.point(i).y();
-      patrol_goals_[i].pose.position.z = decision_config.point(i).z();
-
-      tf::Quaternion quaternion = tf::createQuaternionFromRPY(decision_config.point(i).roll(),
-                                                              decision_config.point(i).pitch(),
-                                                              decision_config.point(i).yaw());
-      patrol_goals_[i].pose.orientation.x = quaternion.x();
-      patrol_goals_[i].pose.orientation.y = quaternion.y();
-      patrol_goals_[i].pose.orientation.z = quaternion.z();
-      patrol_goals_[i].pose.orientation.w = quaternion.w();
+      if (blackboard_->info.team_blue){
+         patrol_goals_[i] = blackboard_->Point2PoseStamped(decision_config.blue().patrol(i));
+      }
+      else{
+         patrol_goals_[i] = blackboard_->Point2PoseStamped(decision_config.red().patrol(i));
+      }
+      
     }
 
     return true;
@@ -94,6 +120,10 @@ class PatrolBehavior {
   std::vector<geometry_msgs::PoseStamped> patrol_goals_;
   unsigned int patrol_count_;
   unsigned int point_size_;
+  std::minstd_rand   generator;  
+
+
+  
 
 };
 }

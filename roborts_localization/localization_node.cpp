@@ -22,6 +22,7 @@ namespace roborts_localization{
 LocalizationNode::LocalizationNode(std::string name) {
   CHECK(Init()) << "Module "  << name <<" initialized failed!";
   initialized_ = true;
+  ROS_INFO("LocalizationNode initialized true!\n");
 }
 
 
@@ -30,18 +31,47 @@ bool LocalizationNode::Init() {
   LocalizationConfig localization_config;
   localization_config.GetParam(&nh_);
 
+  // add prefix
+  std::string tf_prefix = tf::getPrefixParam(nh_);
+
+
   odom_frame_   = std::move(localization_config.odom_frame_id);
   global_frame_ = std::move(localization_config.global_frame_id);
   base_frame_   = std::move(localization_config.base_frame_id);
-
   laser_topic_ = std::move(localization_config.laser_topic_name);
 
-  init_pose_ = {localization_config.initial_pose_x,
-                localization_config.initial_pose_y,
-                localization_config.initial_pose_a};
+
+  
+  if (!tf_prefix.empty()){
+    if (global_frame_ != "map"){
+      global_frame_ = tf::resolve(tf_prefix, global_frame_);
+    }
+    odom_frame_ = tf::resolve(tf_prefix, odom_frame_);
+    base_frame_ = tf::resolve(tf_prefix, base_frame_);
+  }
+  
+
+  ros::NodeHandle private_nh("~");
+  double initial_pose_x;
+  double initial_pose_y;
+  double initial_pose_a;
+  private_nh.param<double>("initial_pose_x", initial_pose_x, 1.0);
+  private_nh.param<double>("initial_pose_y", initial_pose_y, 1.0);
+  private_nh.param<double>("initial_pose_a", initial_pose_a, 0.0);
+
+  // init_pose_ = {localization_config.initial_pose_x,
+  //               localization_config.initial_pose_y,
+  //               localization_config.initial_pose_a};
+
+  init_pose_ = {initial_pose_x,
+                initial_pose_y,
+                initial_pose_a};
+                
   init_cov_ = {localization_config.initial_cov_xx,
                localization_config.initial_cov_yy,
                localization_config.initial_cov_aa};
+
+ 
 
   transform_tolerance_  = ros::Duration(localization_config.transform_tolerance);
   publish_visualize_ = localization_config.publish_visualize;
@@ -67,15 +97,16 @@ bool LocalizationNode::Init() {
   amcl_ptr_->GetParamFromRos(&nh_);
   amcl_ptr_->Init(init_pose_, init_cov_);
 
-  map_init_ = GetStaticMap();
+  
+  map_init_ = GetStaticMap();  
   laser_init_ = GetLaserPose();
-
+  
   return map_init_&&laser_init_;
 }
 
 bool LocalizationNode::GetStaticMap(){
-  static_map_srv_ = nh_.serviceClient<nav_msgs::GetMap>("static_map");
-  ros::service::waitForService("static_map", -1);
+  static_map_srv_ = nh_.serviceClient<nav_msgs::GetMap>("/static_map");
+  ros::service::waitForService("/static_map", -1);
   nav_msgs::GetMap::Request req;
   nav_msgs::GetMap::Response res;
   if(static_map_srv_.call(req,res)) {
@@ -90,10 +121,12 @@ bool LocalizationNode::GetStaticMap(){
 }
 
 bool LocalizationNode::GetLaserPose() {
+  
   auto laser_scan_msg = ros::topic::waitForMessage<sensor_msgs::LaserScan>(laser_topic_);
 
   Vec3d laser_pose;
   laser_pose.setZero();
+
   GetPoseFromTf(base_frame_, laser_scan_msg->header.frame_id, ros::Time(), laser_pose);
   laser_pose[2] = 0; // No need for rotation, or will be error
   DLOG_INFO << "Received laser's pose wrt robot: "<<
@@ -278,7 +311,7 @@ bool LocalizationNode::GetPoseFromTf(const std::string &target_frame,
   } catch (tf::TransformException &e) {
     LOG_ERROR << "Couldn't transform from "
               << source_frame
-              << "to "
+              << " to "
               << target_frame;
     return false;
   }

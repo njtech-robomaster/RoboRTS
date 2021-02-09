@@ -147,6 +147,8 @@ class ObservationBuffer {
    */
   void ResetLastUpdated();
 
+  void ClearObservation();
+
  private:
   /**
    * @brief  Removes any stale observations from the buffer list

@@ -54,6 +54,7 @@ class BackBootAreaBehavior {
 
       if (std::sqrt(std::pow(dx, 2) + std::pow(dy, 2)) > 0.2 || d_yaw > 0.5) {
         chassis_executor_->Execute(boot_position_);
+        blackboard_->SetMyGoal(boot_position_);
 
       }
     }
@@ -75,13 +76,53 @@ class BackBootAreaBehavior {
 
     boot_position_.header.frame_id = "map";
 
-    boot_position_.pose.position.x = decision_config.master_bot().start_position().x();
-    boot_position_.pose.position.z = decision_config.master_bot().start_position().z();
-    boot_position_.pose.position.y = decision_config.master_bot().start_position().y();
+    float x, y, z, roll, pitch, yaw;
+    if (decision_config.isblue()){
+        if (decision_config.master()){
+            x = decision_config.blue().master_bot().start_position().x();
+            y = decision_config.blue().master_bot().start_position().y();
+            z = decision_config.blue().master_bot().start_position().z();
+            roll = decision_config.blue().master_bot().start_position().roll();
+            pitch = decision_config.blue().master_bot().start_position().pitch();
+            yaw = decision_config.blue().master_bot().start_position().yaw();
+        }  
+        else{
+            x = decision_config.blue().wing_bot().start_position().x();
+            y = decision_config.blue().wing_bot().start_position().y();
+            z = decision_config.blue().wing_bot().start_position().z();
+            roll = decision_config.blue().wing_bot().start_position().roll();
+            pitch = decision_config.blue().wing_bot().start_position().pitch();
+            yaw = decision_config.blue().wing_bot().start_position().yaw();
+        }  
+    }
+    else{
+       if (decision_config.master()){
+            x = decision_config.red().master_bot().start_position().x();
+            y = decision_config.red().master_bot().start_position().y();
+            z = decision_config.red().master_bot().start_position().z();
+            roll = decision_config.red().master_bot().start_position().roll();
+            pitch = decision_config.red().master_bot().start_position().pitch();
+            yaw = decision_config.red().master_bot().start_position().yaw();
+       }
+       else{
+            x = decision_config.red().wing_bot().start_position().x();
+            y = decision_config.red().wing_bot().start_position().y();
+            z = decision_config.red().wing_bot().start_position().z();
+            roll = decision_config.red().wing_bot().start_position().roll();
+            pitch = decision_config.red().wing_bot().start_position().pitch();
+            yaw = decision_config.red().wing_bot().start_position().yaw();
 
-    auto master_quaternion = tf::createQuaternionMsgFromRollPitchYaw(decision_config.master_bot().start_position().roll(),
-                                                                     decision_config.master_bot().start_position().pitch(),
-                                                                     decision_config.master_bot().start_position().yaw());
+       }
+    }
+
+
+    boot_position_.pose.position.x = x;
+    boot_position_.pose.position.z = z;
+    boot_position_.pose.position.y = y;
+
+    auto master_quaternion = tf::createQuaternionMsgFromRollPitchYaw(roll,
+                                                                     pitch,
+                                                                     yaw);
     boot_position_.pose.orientation = master_quaternion;
 
     return true;

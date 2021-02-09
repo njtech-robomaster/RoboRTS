@@ -266,5 +266,10 @@ void ObservationBuffer::ResetLastUpdated()
   last_updated_ = ros::Time::now();
 }
 
+void ObservationBuffer::ClearObservation()
+{
+  observation_list_.clear();
+}
+
 } //namespace roborts_costmap
 

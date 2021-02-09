@@ -40,11 +40,11 @@ tolerance_opt {
 }
 
 obstacles_opt {
-    min_obstacle_dist: 0.32 #0.8
-    inflation_dist: 0
+    min_obstacle_dist: 0.40 #0.32
+    inflation_dist: 0.3  # 0
     include_costmap_obstacles: True
-    costmap_obstacles_behind_robot_dist: 0.1
-    obstacle_poses_affected: 30
+    costmap_obstacles_behind_robot_dist: 0.3 # 0.1
+    obstacle_poses_affected: 30  # 30
     legacy_obstacle_association: False
     obstacle_association_cutoff_factor: 5.0
     obstacle_association_force_inclusion_factor: 1.5
