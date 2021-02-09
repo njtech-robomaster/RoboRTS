@@ -8,8 +8,8 @@ transform_tolerance  : 0.1
 #8.40 #1.0
 #14.35 #1.0
 initial_pose_x: 0.5
-initial_pose_y : 0.5
-initial_pose_a : -1.57  # rad
+initial_pose_y : 0.5 
+initial_pose_a : 3.0  # rad
 
 initial_cov_xx : 0.1
 initial_cov_yy : 0.1

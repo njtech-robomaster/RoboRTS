@@ -76,6 +76,12 @@ void ObstacleLayer::OnInitialize() {
   topic_string = para_obstacle.topic_string();
   sensor_frame = para_obstacle.sensor_frame();
 
+  const std::string tf_prefix = tf::getPrefixParam(nh);
+  if (!tf_prefix.empty()){
+    sensor_frame = tf::resolve(tf_prefix, sensor_frame);
+    if (topic_string == "scan") topic_string = "base_scan";
+  }
+
   bool inf_is_valid = false, clearing = false, marking = true;
   inf_is_valid = para_obstacle.inf_is_valid();
   clearing = para_obstacle.clearing();
@@ -176,7 +182,6 @@ void ObstacleLayer::UpdateBounds(double robot_x,
                                  double *min_y,
                                  double *max_x,
                                  double *max_y) {
-  ClearMap();
   if (rolling_window_) {
     UpdateOrigin(robot_x - GetSizeXWorld() / 2, robot_y - GetSizeYWorld() / 2);
   } else if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - reset_time_) > std::chrono::seconds(2)){
@@ -412,19 +417,6 @@ void ObstacleLayer::UpdateFootprint(double robot_x,
 
   for (size_t i = 0; i < transformed_footprint_.size(); i++) {
     Touch(transformed_footprint_[i].x, transformed_footprint_[i].y, min_x, min_y, max_x, max_y);
-  }
-}
-
-void ObstacleLayer::ClearMap() {
-  unsigned int x_size = GetSizeXCell();
-  unsigned int y_size = GetSizeYCell();
-  for (unsigned int mx = 0; mx < x_size; ++mx)
-  {
-    for (unsigned int my = 0; my < y_size; ++my)
-    {
-      unsigned int index = GetIndex(mx, my);
-      costmap_[index] = FREE_SPACE;
-    }
   }
 }
 

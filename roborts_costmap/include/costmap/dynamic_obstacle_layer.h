@@ -53,7 +53,6 @@
 #include "observation_buffer.h"
 #include "map_common.h"
 
-#include "roborts_msgs/GlobalPlannerActionGoal.h"
 #include "tf/transform_listener.h"
 #include "math.h"
 #include <pcl/point_types.h>
@@ -84,9 +83,6 @@ class DynamicObstacleLayer : public CostmapLayer {
                             double *max_x, double *max_y) override;
   void LaserScanCallback(const sensor_msgs::PointCloud2::ConstPtr &message,
                          const std::shared_ptr<ObservationBuffer> &buffer);
-  void GoalCallback(const roborts_msgs::GlobalPlannerActionGoal::ConstPtr &msg);
-  void SetGoal(geometry_msgs::PoseStamped goal);
-  bool GetGoal(geometry_msgs::PoseStamped &goal);
 
  protected:
   bool GetMarkingObservations(std::vector<Observation> &marking_observations) const;
@@ -113,10 +109,6 @@ class DynamicObstacleLayer : public CostmapLayer {
 
   std::vector<Observation> static_clearing_observations_, static_marking_observations_;
   std::chrono::system_clock::time_point reset_time_;
-
-  ros::Subscriber goal_sub_;
-  geometry_msgs::PoseStamped global_goal_;
-  bool goal_updated_ = false;
 };
 
 } //namespace roborts_costmap

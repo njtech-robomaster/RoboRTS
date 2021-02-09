@@ -163,7 +163,10 @@ void LaserDetection::Detection(pcl::PointCloud<pcl::PointXYZ>::Ptr laser){
   // cluster
 
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
-  tree->setInputCloud (sub_pc);
+  if (sub_pc->points.size()>0){
+     tree->setInputCloud (sub_pc);
+  }
+  
 
   std::vector<pcl::PointIndices> cluster_indices;
   pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
@@ -171,7 +174,10 @@ void LaserDetection::Detection(pcl::PointCloud<pcl::PointXYZ>::Ptr laser){
   ec.setMinClusterSize (3);
   ec.setMaxClusterSize (200);
   ec.setSearchMethod (tree);
-  ec.setInputCloud (sub_pc);
+  if (sub_pc->points.size()>0){
+     ec.setInputCloud (sub_pc);
+  }
+  
   ec.extract (cluster_indices);
   int j = 0;
   std::cout<<"detect: ";

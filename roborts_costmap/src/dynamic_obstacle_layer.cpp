@@ -61,6 +61,11 @@ void DynamicObstacleLayer::OnInitialize() {
   sensor_frame = para_obstacle.sensor_frame();
   obstacle_size_ = para_obstacle.obstacle_size();
 
+  const std::string tf_prefix = tf::getPrefixParam(nh);
+  if (!tf_prefix.empty()){
+    sensor_frame = tf::resolve(tf_prefix, sensor_frame); 
+  }
+
   bool clearing = false, marking = true;
   clearing = para_obstacle.clearing();
   marking = para_obstacle.marking();
@@ -106,27 +111,6 @@ void DynamicObstacleLayer::OnInitialize() {
   target_frames.push_back(sensor_frame);
   observation_notifiers_.back()->setTargetFrames(target_frames);
   is_enabled_ = true;
-
-  goal_sub_ = nh.subscribe<roborts_msgs::GlobalPlannerActionGoal>(
-    "/global_planner_node_action/goal", 1, &DynamicObstacleLayer::GoalCallback, this);
-  // ROS_INFO("Subscribe global goal");
-}
-
-void DynamicObstacleLayer::GoalCallback(const roborts_msgs::GlobalPlannerActionGoal::ConstPtr &msg) {
-  ROS_INFO("Dynamic layer received a goal!");
-  // std::cout << "******************************" << std::endl;
-  // std::cout << msg->goal.goal.pose.position.x << "," << msg->goal.goal.pose.position.y << std::endl;
-  SetGoal(msg->goal.goal);
-}
-
-void DynamicObstacleLayer::SetGoal(geometry_msgs::PoseStamped goal) {
-  global_goal_ = goal;
-  goal_updated_ = true;
-}
-
-bool DynamicObstacleLayer::GetGoal(geometry_msgs::PoseStamped &goal) {
-  goal = global_goal_;
-  return goal_updated_;
 }
 
 void DynamicObstacleLayer::LaserScanCallback(const sensor_msgs::PointCloud2::ConstPtr &message,
@@ -147,25 +131,12 @@ void DynamicObstacleLayer::LaserScanCallback(const sensor_msgs::PointCloud2::Con
   // robot_center[0] = transform.getOrigin().x();
   // robot_center[1] = transform.getOrigin().y();
 
-  bool set_point = true;
-  geometry_msgs::PoseStamped goal;
-  bool is_update = GetGoal(goal);
-  // std::cout << goal.pose.position.x << "," << goal.pose.position.y << std::endl;
-  if (is_update) {
-    if (abs(goal.pose.position.x-4.0)<0.1 && abs(goal.pose.position.y-0.8)<0.1) {
-      set_point = false;
-    }
-    else if (abs(goal.pose.position.x-4.0)<0.1 && abs(goal.pose.position.y-4.2)<0.1) {
-      set_point = false;
-    }
-  }
-  std::cout << "set_point " << set_point << std::endl;
-
   pcl::PointCloud<pcl::PointXYZ>::Ptr sub_pc(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::fromROSMsg(*message, *sub_pc);
   pcl::PointCloud<pcl::PointXYZ> cloud;
   pcl::fromROSMsg(*message, cloud);
-  if (cloud.size() == 0) {
+  if (cloud.size() == 0)
+  {
     // ROS_INFO("No dynamic obstacle.");
     sensor_msgs::PointCloud2 temp_cloud;
     pcl::toROSMsg(cloud, temp_cloud);
@@ -180,14 +151,18 @@ void DynamicObstacleLayer::LaserScanCallback(const sensor_msgs::PointCloud2::Con
 
   std::vector<Eigen::Vector2d> vec_obstacle_center;
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
-  tree->setInputCloud (sub_pc);
+  if (sub_pc->points.size()>0){
+     tree->setInputCloud (sub_pc);
+  }
   std::vector<pcl::PointIndices> cluster_indices;
   pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
   ec.setClusterTolerance (0.4); 
-  ec.setMinClusterSize (10);
+  ec.setMinClusterSize (3);
   ec.setMaxClusterSize (200);
   ec.setSearchMethod (tree);
-  ec.setInputCloud (sub_pc);
+  if (sub_pc->points.size()>0){
+     ec.setInputCloud (sub_pc);
+  }
   ec.extract (cluster_indices);
   // float min_dist = 99999;
   float x = 0.0;
@@ -211,16 +186,7 @@ void DynamicObstacleLayer::LaserScanCallback(const sensor_msgs::PointCloud2::Con
     Eigen::Vector2d center;
     center[0] = x / cnt;
     center[1] = y / cnt;
-    if (set_point) {
-      vec_obstacle_center.push_back(center);
-    }
-    else {
-      if (center[0]>3.5 && center[0]<5.5 && center[1]>0 && center[1]<1.5) {}
-      else if (center[0]>2.5 && center[0]<4.5 && center[1]>3.5 && center[1]<5.0) {}
-      else {
-        vec_obstacle_center.push_back(center);
-      }
-    }
+    vec_obstacle_center.push_back(center);
     all_cluster_points.push_back(cloud_xy);
     cloud_xy.clear();
     x = 0.0;

@@ -35,7 +35,7 @@ class NNBehavior {
     }
 
     // Deserialize the ScriptModule from a file using torch::jit::load().
-    module = torch::jit::load("/home/drl/RM/weights/agent_model.pt");
+    module = torch::jit::load("/home/hu/roborts_pytorch/weights/agent_model.pt");
     assert(module != nullptr);
     std::cout << "Load Model OK!\n";
     hidden_state = torch::zeros({1, 64});

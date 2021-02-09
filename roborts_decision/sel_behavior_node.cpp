@@ -14,6 +14,7 @@
 #include "example_behavior/test_behavior.h"
 #include "example_behavior/ambush_behavior.h"
 #include "example_behavior/attack_behavior.h"
+#include "example_behavior/nn_behavior.h"
 
 void Command();
 char command = 'a';
@@ -38,6 +39,7 @@ int main(int argc, char **argv) {
   roborts_decision::ShieldBehavior     shield_behavior(chassis_executor, blackboard, full_path);
   roborts_decision::TestBehavior      test_behavior(chassis_executor, blackboard, full_path);
   roborts_decision::AttackBehavior    attack_behavior(chassis_executor, blackboard, full_path);
+  roborts_decision::NNBehavior        nn_behavior(chassis_executor, blackboard, full_path);
 
 
   auto command_thread= std::thread(Command);
