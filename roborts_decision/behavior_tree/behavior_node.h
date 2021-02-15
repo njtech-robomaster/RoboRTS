@@ -22,8 +22,9 @@
 #include <thread>
 #include <vector>
 
-#include "../blackboard/blackboard.h"
+#include "../blackboard/blackboard_raw.h"
 #include "behavior_state.h"
+#include "../strategy/strategy_execute.h"
 
 namespace roborts_decision{
 /**
@@ -40,12 +41,12 @@ enum class BehaviorType {
  * @brif Abort Type of behavior tree precondition node
  * @details For more information refer to https://docs.unrealengine.com/en-us/Engine/AI/BehaviorTrees/NodeReference/Decorators
  */
-enum class AbortType {
+/*enum class AbortType {
   NONE,           ///<Do not abort anything
   SELF,           ///<Abort self, and any sub-trees running under this node
   LOW_PRIORITY,   ///<Abort any nodes to the right of this node
   BOTH            ///<Abort self, any sub-trees running under me, and any nodes to the right of this node
-};
+};*/
 /**
  * @brief Behavior tree base node
  */
@@ -186,185 +187,7 @@ class BehaviorNode : public std::enable_shared_from_this<BehaviorNode>{
   //! Level of the tree
   unsigned  int level_;
 };
-/**
- * @brief Behavior tree action node inherited from BehaviorNode
- */
-class ActionNode: public BehaviorNode{
- public:
-  /**
-   * @brief Constructor of ActionNode
-   * @param name Name of the behavior node
-   * @param blackboard_ptr Blackboard of the behavior node
-   */
-  ActionNode(std::string name, const Blackboard::Ptr &blackboard_ptr):
-      BehaviorNode::BehaviorNode(name,BehaviorType::ACTION, blackboard_ptr){}
-  virtual ~ActionNode() = default;
 
- protected:
-  /**
-   * @brief Initialize something before starting to tick the node
-   */
-  virtual void OnInitialize() = 0;
-  /**
-   * @brief Tick the node and update the state of the behavior node
-   * @return the state of the behavior node
-   */
-  virtual BehaviorState Update() = 0;
-  /**
-   * @brief Recover or reset something After getting the result
-   * @param state Input behavior state
-   */
-  virtual void OnTerminate(BehaviorState state) = 0;
-
-};
-/**
- * @brief Behavior tree decorator node inherited from BehaviorNode
- */
-class DecoratorNode: public BehaviorNode{
- public:
-  /**
-   * @brief Constructor of DecoratorNode
-   * @param name Name of the behavior node
-   * @param behavior_type Type of the behavior node
-   * @param blackboard_ptr Blackboard of the behavior node
-   */
-  DecoratorNode(std::string name, BehaviorType behavior_type, const Blackboard::Ptr &blackboard_ptr):
-      BehaviorNode::BehaviorNode(name, behavior_type, blackboard_ptr),
-      child_node_ptr_(nullptr){  }
-  virtual ~DecoratorNode() = default;
-  /**
-   * @brief Get the child/decorated node of the behavior node
-   * @return the child/decorated node of the behavior node
-   */
-  virtual BehaviorNode::Ptr GetChild(){
-    return child_node_ptr_ ;
-  }
-  /**
-   * @brief Set the child/decorated node of the behavior node
-   * @param child_node_ptr the child/decorated node of the behavior node
-   */
-  void SetChild(const BehaviorNode::Ptr &child_node_ptr) {
-    if(child_node_ptr_){
-      child_node_ptr_->SetParent(nullptr);
-      child_node_ptr->SetLevel(0);
-    }
-    child_node_ptr_ = child_node_ptr;
-    child_node_ptr_->SetParent(shared_from_this());
-    child_node_ptr_->SetLevel(level_);
-  }
-
- protected:
-  /**
-   * @brief Initialize something before starting to tick the node
-   */
-  virtual void OnInitialize() = 0;
-  /**
-   * @brief Tick the node and update the state of the behavior node
-   * @return the state of the behavior node
-   */
-  virtual BehaviorState Update() = 0;
-  /**
-   * @brief Recover or reset something After getting the result
-   * @param state Input behavior state
-   */
-  virtual void OnTerminate(BehaviorState state) = 0;
-  //! the child/decorated node of the behavior node
-  BehaviorNode::Ptr child_node_ptr_;
-};
-/**
- * @brief Behavior tree precondition node inherited from DecoratorNode
- */
-class PreconditionNode: public DecoratorNode{
- public:
-  /**
-   * @brief Constructor of PreconditionNode
-   * @param name Name of the behavior node
-   * @param blackboard_ptr Blackboard of the behavior node
-   * @param precondition_function the determined function of the precondition node
-   * @param abort_type Abort type of the precondition node
-   */
-  PreconditionNode(std::string name, const Blackboard::Ptr &blackboard_ptr,
-                   std::function<bool()> precondition_function = std::function<bool()>(),
-                   AbortType abort_type = AbortType::NONE):
-      DecoratorNode::DecoratorNode(name, BehaviorType::PRECONDITION, blackboard_ptr),
-      precondition_function_(precondition_function), abort_type_(abort_type){}
-  virtual ~PreconditionNode() = default;
-  /**
-   * @brief Get the abort type of the precondition node
-   * @return the abort type of the precondition node
-   */
-  AbortType GetAbortType(){
-    return abort_type_;
-  }
-
- protected:
-  /**
-   * @brief Initialize something before starting to tick the node
-   */
-  virtual void OnInitialize() {
-    ROS_INFO("%s %s", name_.c_str(), __FUNCTION__);
-  }
-
-  virtual bool Precondition(){
-    if(precondition_function_){
-      return precondition_function_();
-    }
-    else{
-      ROS_ERROR("There is no chosen precondition function, then return false by default!");
-      return false;
-    }
-  };
-  /**
-   * @brief Tick the node and update the state of the behavior node
-   * @details Every tick cycle, precondition node will reevaluate the precondition and
-   *          tick its decorated node according to the abort type
-   * @return the state of the behavior node
-   */
-  virtual BehaviorState Update(){
-    if(child_node_ptr_ == nullptr){
-      return BehaviorState::SUCCESS;
-    }
-    // Reevaluation
-    if(Reevaluation()){
-      BehaviorState state = child_node_ptr_->Run();
-      return state;
-    }
-    return BehaviorState::FAILURE;
-  }
-  /**
-   * @brief Recover or reset something After getting the result
-   * @param state Input behavior state
-   */
-  virtual void OnTerminate(BehaviorState state) {
-    switch (state){
-      case BehaviorState::IDLE:
-        ROS_INFO("%s %s IDLE!", name_.c_str(), __FUNCTION__);
-        //TODO: the following recovery measure is called by parent node, and deliver to reset its running child node
-        child_node_ptr_->Reset();
-        break;
-      case BehaviorState::SUCCESS:
-        ROS_INFO("%s %s SUCCESS!", name_.c_str(), __FUNCTION__);
-        break;
-      case BehaviorState::FAILURE:
-        ROS_INFO("%s %s FAILURE!", name_.c_str(), __FUNCTION__);
-        //TODO: the following recovery measure is in failure situation caused by precondition false.
-        child_node_ptr_->Reset();
-        break;
-      default:
-        ROS_INFO("%s %s ERROR!", name_.c_str(), __FUNCTION__);
-        return;
-    }
-  }
-  /**
-   * @brief Reevaluate the precondition every tick according to abort type
-   * @return True if reevaluation passes
-   */
-  virtual bool Reevaluation();
-  //! the determined function of the precondition node
-  std::function<bool()> precondition_function_;
-  //! the abort type of the precondition node
-  AbortType abort_type_;
-};
 /**
  * @brief Behavior tree composite node inherited from BehaviorNode
  */
@@ -464,45 +287,16 @@ class SelectorNode: public CompositeNode{
    */
   SelectorNode(std::string name, const Blackboard::Ptr &blackboard_ptr):
       CompositeNode::CompositeNode(name, BehaviorType::SELECTOR, blackboard_ptr) {
+    this->ptr_selector_node_ = nullptr;
   }
   virtual ~SelectorNode() = default;
-  /**
-   * @brief Overwrite the function in the CompositeNode to add the reevaluation features for selector node
-   * @param child_node_ptr The expected child behavior node
-   */
-  virtual void AddChildren(const BehaviorNode::Ptr& child_node_ptr){
 
-    CompositeNode::AddChildren(child_node_ptr);
 
-    children_node_reevaluation_.push_back
-        (child_node_ptr->GetBehaviorType()==BehaviorType::PRECONDITION
-             && (std::dynamic_pointer_cast<PreconditionNode>(child_node_ptr)->GetAbortType() == AbortType::LOW_PRIORITY
-                 ||std::dynamic_pointer_cast<PreconditionNode>(child_node_ptr)->GetAbortType() == AbortType::BOTH));
+   virtual void AddChildren(std::initializer_list<std::shared_ptr<AbstractCommonStrategy>> child_node_ptr_list);
 
-  }
-  /**
-   * @brief Overwrite the function in the CompositeNode to add the reevaluation features for selector node
-   * @param child_node_ptr A list of the expected child behavior nodes
-   */
-  virtual void AddChildren(std::initializer_list<BehaviorNode::Ptr> child_node_ptr_list){
-
-    CompositeNode::AddChildren(child_node_ptr_list);
-
-    for (auto child_node_ptr = child_node_ptr_list.begin(); child_node_ptr!=child_node_ptr_list.end(); child_node_ptr++) {
-      children_node_reevaluation_.push_back
-          ((*child_node_ptr)->GetBehaviorType()==BehaviorType::PRECONDITION
-               && (std::dynamic_pointer_cast<PreconditionNode>(*child_node_ptr)->GetAbortType() == AbortType::LOW_PRIORITY
-                   ||std::dynamic_pointer_cast<PreconditionNode>(*child_node_ptr)->GetAbortType() == AbortType::BOTH));
-    }
-  }
-  /**
-   * @brief Set the index of the child node to tick
-   * @param children_node_index The expected index of the child node to tick
-   */
-  void SetChildrenIndex(unsigned int children_node_index){
-    children_node_index_=children_node_index;
-  }
  protected:
+  void SetChildrenIndex(unsigned int children_node_index);
+
   /**
    * @brief Initialize something before starting to tick the node
    */
@@ -511,141 +305,26 @@ class SelectorNode: public CompositeNode{
     ROS_INFO("%s %s", name_.c_str(), __FUNCTION__);
   }
 
-  /**
-   * @brief Tick the node and update the state of the behavior node
-   * @return the state of the behavior node
-   */
-  virtual BehaviorState Update(){
+  virtual BehaviorState Update();
 
-    if (children_node_ptr_.size() == 0) {
-      return BehaviorState::SUCCESS;
-    }
+  std::shared_ptr<AbstractCommonStrategy> GetAction();
 
-    //Reevaluation
-    for(unsigned int index = 0; index < children_node_index_; index++){
-      ROS_INFO("Reevaluation");
-      if (children_node_reevaluation_.at(index)){
-        BehaviorState state = children_node_ptr_.at(index)->Run();
-        if(index == children_node_index_){
-          ROS_INFO("%s abort goes on! ", name_.c_str());
-          if (state != BehaviorState::FAILURE) {
-            return state;
-          }
-          ++children_node_index_;
-          break;
-        }
-      }
-    }
+  bool HasActionOnGoing();
 
-    while(true){
+  void ExitThisAction();
 
-      BehaviorState state = children_node_ptr_.at(children_node_index_)->Run();
+  std::shared_ptr<AbstractCommonStrategy> ChooseActionToExecute();
 
-      if (state != BehaviorState::FAILURE) {
-        return state;
-      }
+  void OnTerminate(BehaviorState state);
+ private:
+  std::shared_ptr<AbstractCommonStrategy> ptr_selector_node_;
+  std::vector<std::shared_ptr<AbstractCommonStrategy>> children_node_ptr_vector_;
 
-      if (++children_node_index_ == children_node_ptr_.size()) {
-        children_node_index_ = 0;
-        return BehaviorState::FAILURE;
-      }
 
-    }
-  }
-  /**
-   * @brief Recover or reset something After getting the result
-   * @param state Input behavior state
-   */
-  virtual void OnTerminate(BehaviorState state){
-    switch (state){
-      case BehaviorState::IDLE:
-        ROS_INFO("%s %s IDLE!", name_.c_str(), __FUNCTION__);
-        //TODO: the following recovery measure is called by parent node, and deliver to reset its running child node
-        children_node_ptr_.at(children_node_index_)->Reset();
-        break;
-      case BehaviorState::SUCCESS:
-        ROS_INFO("%s %s SUCCESS!", name_.c_str(), __FUNCTION__);
-        break;
-      case BehaviorState::FAILURE:
-        ROS_INFO("%s %s FAILURE!", name_.c_str(), __FUNCTION__);
-        break;
-      default:
-        ROS_INFO("%s %s ERROR!", name_.c_str(), __FUNCTION__);
-        return;
-    }
-  }
-
-  //! the list of reeavalution state for each child node
-  std::vector<bool> children_node_reevaluation_;
 };
-/**
- * @brief Behavior tree sequence node inherited from CompositeNode
- */
-class SequenceNode: public CompositeNode{
- public:
-  /**
-   * @brief Constructor of SequenceNode
-   * @param name Name of behavior node
-   * @param blackboard_ptr Blackboard of behavior node
-   */
-  SequenceNode(std::string name, const Blackboard::Ptr &blackboard_ptr):
-      CompositeNode::CompositeNode(name, BehaviorType::SEQUENCE, blackboard_ptr) {}
-  virtual ~SequenceNode() = default;
 
- protected:
-  /**
-   * @brief Initialize something before starting to tick the node
-   */
-  virtual void OnInitialize(){
-    children_node_index_ = 0;
-    ROS_INFO("%s %s", name_.c_str(), __FUNCTION__);
-  }
-  /**
-   * @brief Tick the node and update the state of the behavior node
-   * @return the state of the behavior node
-   */
-  virtual BehaviorState Update(){
 
-    if (children_node_ptr_.size() == 0) {
-      return BehaviorState::SUCCESS;
-    }
 
-    while(true){
-
-      BehaviorState state = children_node_ptr_.at(children_node_index_)->Run();
-
-      if (state != BehaviorState::SUCCESS) {
-        return state;
-      }
-      if (++children_node_index_ == children_node_ptr_.size()) {
-        children_node_index_ = 0;
-        return BehaviorState::SUCCESS;
-      }
-
-    }
-  }
-  /**
-   * @brief Recover or reset something After getting the result
-   * @param state Input behavior state
-   */
-  virtual void OnTerminate(BehaviorState state){
-    switch (state){
-      case BehaviorState::IDLE:
-        ROS_INFO("%s %s IDLE!", name_.c_str(), __FUNCTION__);
-        children_node_ptr_.at(children_node_index_)->Reset();
-        break;
-      case BehaviorState::SUCCESS:
-        ROS_INFO("%s %s SUCCESS!", name_.c_str(), __FUNCTION__);
-        break;
-      case BehaviorState::FAILURE:
-        ROS_INFO("%s %s FAILURE!", name_.c_str(), __FUNCTION__);
-        break;
-      default:
-        ROS_INFO("%s %s ERROR!", name_.c_str(), __FUNCTION__);
-        return;
-    }
-  }
-};
 /**
  * @brief Behavior tree parallel node inherited from CompositeNode
  */
@@ -662,7 +341,9 @@ class ParallelNode: public CompositeNode{
       CompositeNode::CompositeNode(name, BehaviorType::PARALLEL, blackboard_ptr),
       threshold_(threshold),
       success_count_(0),
-      failure_count_(0){}
+      failure_count_(0){
+
+  }
 
   virtual ~ParallelNode() = default;
  protected:
@@ -675,6 +356,7 @@ class ParallelNode: public CompositeNode{
     success_count_=0;
     children_node_done_.clear();
     children_node_done_.resize(children_node_ptr_.size(),false);
+    ROS_INFO("initialize start");
     ROS_INFO("%s %s", name_.c_str(), __FUNCTION__);
   }
   /**
@@ -683,15 +365,15 @@ class ParallelNode: public CompositeNode{
    */
   virtual BehaviorState Update(){
 
-    if (children_node_ptr_.size() == 0) {
+    if (children_node_ptr_.empty()) {
       return BehaviorState::SUCCESS;
     }
 
     for (unsigned int index = 0; index!=children_node_ptr_.size(); index++) {
-      if (children_node_done_.at(index) == false){
+      if (!children_node_done_.at(index)){
         BehaviorState state = children_node_ptr_.at(index)->Run();
 
-        if (state == BehaviorState::SUCCESS) {
+/*        if (state == BehaviorState::SUCCESS) {
           children_node_done_.at(index) = true;
           if (++success_count_ >= threshold_) {
             return BehaviorState::SUCCESS;
@@ -702,7 +384,7 @@ class ParallelNode: public CompositeNode{
           if (++failure_count_ >= children_node_ptr_.size()-threshold_) {
             return BehaviorState::FAILURE;
           }
-        }
+        }*/
 
       }
     }
@@ -743,43 +425,6 @@ class ParallelNode: public CompositeNode{
   unsigned int threshold_;
 };
 
-bool PreconditionNode::Reevaluation(){
-
-  // Back Reevaluation
-  if (parent_node_ptr_ != nullptr && parent_node_ptr_->GetBehaviorType() == BehaviorType::SELECTOR
-      && (abort_type_ == AbortType::LOW_PRIORITY || abort_type_ ==  AbortType::BOTH)){
-    auto parent_selector_node_ptr = std::dynamic_pointer_cast<SelectorNode>(parent_node_ptr_);
-
-    auto parent_children = parent_selector_node_ptr->GetChildren();
-    auto iter_in_parent = std::find(parent_children.begin(), parent_children.end(), shared_from_this());
-    if (iter_in_parent == parent_children.end()) {
-      ROS_DEBUG("Can't find current node in parent!");
-      return false;
-    }
-    unsigned int index_in_parent = iter_in_parent - parent_children.begin();
-    if (index_in_parent < parent_selector_node_ptr->GetChildrenIndex()){
-      if(Precondition()){
-        //Abort Measures
-        ROS_INFO("Abort happens!");
-        parent_children.at(parent_selector_node_ptr->GetChildrenIndex())->Reset();
-        parent_selector_node_ptr->SetChildrenIndex(index_in_parent);
-        return true;
-      }
-      else{
-        return false;
-      }
-    }
-  }
-  // Self Reevaluation
-
-  if(abort_type_== AbortType::SELF || abort_type_== AbortType::BOTH
-      || child_node_ptr_->GetBehaviorState() != BehaviorState::RUNNING){
-    if(!Precondition()){
-      return false;
-    }
-  }
-  return true;
-}
 
 } //namespace roborts_decision
 
