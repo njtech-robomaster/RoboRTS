@@ -52,30 +52,34 @@
 #ifndef ROBORTS_COSTMAP_STATIC_LAYER_H
 #define ROBORTS_COSTMAP_STATIC_LAYER_H
 
-#include <nav_msgs/OccupancyGrid.h>
+#include "costmap_layer.h"
 #include "io/io.h"
 #include "map_common.h"
-#include "costmap_layer.h"
+#include <map>
+#include <nav_msgs/OccupancyGrid.h>
+#include <roborts_msgs/BuffZoneStatus.h>
 
 namespace roborts_costmap {
 
 class StaticLayer : public CostmapLayer {
 
- public:
+public:
   StaticLayer() {}
   virtual ~StaticLayer() {}
   virtual void OnInitialize();
   virtual void Activate();
   virtual void Deactivate();
   virtual void Reset();
-  virtual void UpdateCosts(Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
-  virtual void UpdateBounds(double robot_x, double robot_y, double robot_yaw, double* min_x, double* min_y,
-                            double* max_x, double* max_y);
+  virtual void UpdateCosts(Costmap2D &master_grid, int min_i, int min_j,
+                           int max_i, int max_j);
+  virtual void UpdateBounds(double robot_x, double robot_y, double robot_yaw,
+                            double *min_x, double *min_y, double *max_x,
+                            double *max_y);
   virtual void MatchSize();
 
- private:
-  void InComingMap(const nav_msgs::OccupancyGridConstPtr& new_map);
-//  void IncomingUpdate(const map_msgs::OccupancyGridUpdateConstPtr& update);
+private:
+  void InComingMap(const nav_msgs::OccupancyGridConstPtr &new_map);
+  //  void IncomingUpdate(const map_msgs::OccupancyGridUpdateConstPtr& update);
   unsigned char InterpretValue(unsigned char value);
   std::string global_frame_;
   std::string map_frame_;
@@ -91,7 +95,6 @@ class StaticLayer : public CostmapLayer {
   bool trinary_costmap_;
   ros::Subscriber map_sub_, map_update_sub_;
 };
-
 
 } // namespace roborts_costmap
 #endif

@@ -28,6 +28,11 @@ find_package(Boost REQUIRED)
 
 catkin_package()
 
+# For clion symbol updates
+include_directories(
+        ../../../devel/include
+)
+
 add_subdirectory(global_planner)
 add_subdirectory(local_planner)
 

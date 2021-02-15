@@ -21,7 +21,7 @@
 
 #include "costmap/costmap_interface.h"
 
-namespace roborts_global_planner{
+namespace roborts_global_planner {
 
 class GlobalPlannerBase {
  public:
@@ -33,8 +33,11 @@ class GlobalPlannerBase {
   virtual ~GlobalPlannerBase() = default;
 
   virtual roborts_common::ErrorInfo Plan(const geometry_msgs::PoseStamped &start,
-                                       const geometry_msgs::PoseStamped &goal,
-                                       std::vector<geometry_msgs::PoseStamped> &path) = 0;
+                                         const geometry_msgs::PoseStamped &goal,
+                                         std::vector<geometry_msgs::PoseStamped> &path,
+                                         const std::string &robot_id,
+                                         const std::string &syne_robot_id,
+                                         const bool is_clean) = 0;
 
  protected:
   CostmapPtr costmap_ptr_;

@@ -38,7 +38,9 @@
 #include "proto/global_planner_config.pb.h"
 #include "global_planner_algorithms.h"
 
-namespace roborts_global_planner{
+#include "roborts_msgs/UpdateCurrentIndex.h"
+
+namespace roborts_global_planner {
 
 /**
  * @brief Node class for global planner module.
@@ -48,15 +50,17 @@ class GlobalPlannerNode {
   typedef std::shared_ptr<roborts_costmap::CostmapInterface> CostmapPtr;
   typedef std::shared_ptr<tf::TransformListener> TfPtr;
   typedef std::unique_ptr<GlobalPlannerBase> GlobalPlannerPtr;
-  typedef actionlib::SimpleActionServer<roborts_msgs::GlobalPlannerAction> GlobalPlannerServer;
- /**
-  * @brief Constructor including all initialization and configuration
-  */
+  typedef actionlib::SimpleActionServer<roborts_msgs::GlobalPlannerAction>
+      GlobalPlannerServer;
+
+  /**
+   * @brief Constructor including all initialization and configuration
+   */
   GlobalPlannerNode();
 
- /**
-  * @brief Destructor which stops all running threads .
-  */
+  /**
+   * @brief Destructor which stops all running threads .
+   */
   ~GlobalPlannerNode();
 
  private:
@@ -66,66 +70,83 @@ class GlobalPlannerNode {
    * @return ErrorInfo which is OK if succeed
    */
   roborts_common::ErrorInfo Init();
+
   /**
    * @brief Callback function for the actionlib task
    * @param msg The task goal message from actionlib client
    */
   void GoalCallback(const roborts_msgs::GlobalPlannerGoal::ConstPtr &msg);
+
   /**
    * @brief Set the state for planning module
    * @param node_state Enumerate State for global planning
    */
   void SetNodeState(roborts_common::NodeState node_state);
+
   /**
    * @brief Get the state for planning module
    * @return Enumerate State for global planning
    */
   roborts_common::NodeState GetNodeState();
+
   /**
    * @brief Set the state for planning module
    * @param error_info Error Info for global planning
    */
   void SetErrorInfo(roborts_common::ErrorInfo error_info);
+
   /**
    * @brief Get the error info for planning module
    * @return Error Info for global planning
    */
   roborts_common::ErrorInfo GetErrorInfo();
+
   /**
-   * @brief Check if the plan thread is still under execution, if not, start the plan thread.
+   * @brief Check if the plan thread is still under execution, if not, start the
+   * plan thread.
    * @return True if start the plan thread successful, else false.
    */
   geometry_msgs::PoseStamped GetGoal();
+
   /**
    * @brief Set the planner goal
    * @param goal planner goal
    */
   void SetGoal(geometry_msgs::PoseStamped goal);
+
   /**
    * @brief Start the plan thread and set the state to RUNNING
    */
   void StartPlanning();
+
   /**
    * @brief Stop the plan thread and set the state to IDLE
    */
   void StopPlanning();
+
   /**
    * @brief Plan thread which mainly include a planning cycle process:
-   * 1. Get the current start pose and goal pose, validate and transform them according to frame of costmap \n
+   * 1. Get the current start pose and goal pose, validate and transform them
+   * according to frame of costmap \n
    * 2. Make a plan using the selected algorithm \n
-   * 3. If success, check the completion if the current pose is close to the goal. If completed, no need of planning and jump out of the cycle!\n
-   * 4. If not succeed, check if it reaches the max retries. if so, no need of planning and jump out of the cycle!\n
-   * 5. If planning still needed, go to next cycle and wait for a duration which the global planning frequency decides.
+   * 3. If success, check the completion if the current pose is close to the
+   * goal. If completed, no need of planning and jump out of the cycle!\n
+   * 4. If not succeed, check if it reaches the max retries. if so, no need of
+   * planning and jump out of the cycle!\n
+   * 5. If planning still needed, go to next cycle and wait for a duration which
+   * the global planning frequency decides.
    */
   void PlanThread();
+
   /**
    * @brief Get the Euclidean distance of two poses.
    * @param pose1 The first pose in the form of geometry_msgs::PoseStamped
    * @param pose2 The second pose in the form of geometry_msgs::PoseStamped
    * @return The Euclidean distance
    */
-  double GetDistance(const geometry_msgs::PoseStamped& pose1,
-                     const geometry_msgs::PoseStamped& pose2);
+  double GetDistance(const geometry_msgs::PoseStamped &pose1,
+                     const geometry_msgs::PoseStamped &pose2);
+
   /**
    * @brief Get the angle difference of two pose .
    * @param pose1 The first pose in the form of geometry_msgs::PoseStamped
@@ -134,9 +155,12 @@ class GlobalPlannerNode {
    */
   double GetAngle(const geometry_msgs::PoseStamped &pose1,
                   const geometry_msgs::PoseStamped &pose2);
+
   /**
-   * @brief Input the path in geometry_msgs::PoseStamped vector and publish the path in nav_msgs::Path
-   * @param path the path generated from global planner, indeed the discrete poses in the form of geometry_msgs::PoseStamped vector
+   * @brief Input the path in geometry_msgs::PoseStamped vector and publish the
+   * path in nav_msgs::Path
+   * @param path the path generated from global planner, indeed the discrete
+   * poses in the form of geometry_msgs::PoseStamped vector
    */
   void PathVisualization(const std::vector<geometry_msgs::PoseStamped> &path);
 
@@ -181,15 +205,18 @@ class GlobalPlannerNode {
   roborts_common::ErrorInfo error_info_;
   //! Global planner error infomation mutex
   std::mutex error_info_mtx_;
-
   //! Cycle Duration in microseconds
   std::chrono::microseconds cycle_duration_;
   //! Max retry count
   int max_retries_;
+  //! is clean the costmap
+  bool clean_costmap{true};
   //! Distance tolerance towards goal
   double goal_distance_tolerance_;
   //! Angle tolerance towards goal
   double goal_angle_tolerance_;
+  std::string syne_robot_id_;
+  std::string robot_id_;
 };
 
 } //namespace roborts_global_planner

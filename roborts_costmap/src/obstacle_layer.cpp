@@ -58,8 +58,11 @@ void ObstacleLayer::OnInitialize() {
   ros::NodeHandle nh;
   ParaObstacleLayer para_obstacle;
 
+  ros::NodeHandle ns_nh;
+  std::string config_dir;
+  ns_nh.getParam("config_dir", config_dir);
   std::string obstacle_map = ros::package::getPath("roborts_costmap") + \
-      "/config/obstacle_layer_config.prototxt";
+      "/config/" + config_dir + "/obstacle_layer_config.prototxt";
   roborts_common::ReadProtoFromTextFile(obstacle_map.c_str(), &para_obstacle);
   double observation_keep_time = 0.1, expected_update_rate = 10.0, min_obstacle_height = 0.2, \
  max_obstacle_height = 0.6, obstacle_range = 2.5, raytrace_range = 3.0, transform_tolerance = 0.2;
@@ -91,22 +94,22 @@ void ObstacleLayer::OnInitialize() {
   global_frame_ = layered_costmap_->GetGlobalFrameID();
   ObstacleLayer::MatchSize();
   observation_buffers_.push_back(std::shared_ptr<ObservationBuffer>(new ObservationBuffer(topic_string,
-                                                                                            observation_keep_time,
-                                                                                            expected_update_rate,
-                                                                                            min_obstacle_height,
-                                                                                            max_obstacle_height,
-                                                                                            obstacle_range,
-                                                                                            raytrace_range,
-                                                                                            *tf_,
-                                                                                            global_frame_,
-                                                                                            sensor_frame,
-                                                                                            transform_tolerance)));
+                                                                                          observation_keep_time,
+                                                                                          expected_update_rate,
+                                                                                          min_obstacle_height,
+                                                                                          max_obstacle_height,
+                                                                                          obstacle_range,
+                                                                                          raytrace_range,
+                                                                                          *tf_,
+                                                                                          global_frame_,
+                                                                                          sensor_frame,
+                                                                                          transform_tolerance)));
   if (marking) {
     marking_buffers_.push_back(observation_buffers_.back());
   }
   if (clearing) {
     clearing_buffers_.push_back(observation_buffers_.back());
-  } 
+  }
   reset_time_ = std::chrono::system_clock::now();
   std::shared_ptr<message_filters::Subscriber<sensor_msgs::LaserScan>
   > sub(new message_filters::Subscriber<sensor_msgs::LaserScan>(nh, topic_string, 50));
@@ -150,6 +153,11 @@ void ObstacleLayer::LaserScanValidInfoCallback(const sensor_msgs::LaserScanConst
   sensor_msgs::LaserScan message = *raw_message;
   for (size_t i = 0; i < message.ranges.size(); i++) {
     range = message.ranges[i];
+    // TODO
+    if (range > 0 && range < 0.7 && ((i > 800 && i < 850) || (i > 610 && i < 635))) {
+      message.ranges[i] = message.range_max - epsilon;
+      // std::cout << "!!!!!!!!!!!!!!!!" << i << std::endl;
+    }
     if (!std::isfinite(range) && range > 0) {
       message.ranges[i] = message.range_max - epsilon;
     }
@@ -172,13 +180,14 @@ void ObstacleLayer::LaserScanValidInfoCallback(const sensor_msgs::LaserScanConst
 void ObstacleLayer::UpdateBounds(double robot_x,
                                  double robot_y,
                                  double robot_yaw,
-                                 double *min_x,
-                                 double *min_y,
-                                 double *max_x,
-                                 double *max_y) {
+                                 double* min_x,
+                                 double* min_y,
+                                 double* max_x,
+                                 double* max_y) {
   if (rolling_window_) {
     UpdateOrigin(robot_x - GetSizeXWorld() / 2, robot_y - GetSizeYWorld() / 2);
-  } else if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - reset_time_) > std::chrono::seconds(2)){
+  } else if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - reset_time_)
+      > std::chrono::seconds(2)) {
     reset_time_ = std::chrono::system_clock::now();
     ResetMaps();
   }
@@ -311,10 +320,10 @@ bool ObstacleLayer::GetClearingObservations(std::vector<Observation> &clearing_o
 }
 
 void ObstacleLayer::RaytraceFreespace(const Observation &clearing_observation,
-                                      double *min_x,
-                                      double *min_y,
-                                      double *max_x,
-                                      double *max_y) {
+                                      double* min_x,
+                                      double* min_y,
+                                      double* max_x,
+                                      double* max_y) {
   double ox = clearing_observation.origin_.x;
   double oy = clearing_observation.origin_.y;
   pcl::PointCloud<pcl::PointXYZ> cloud = *(clearing_observation.cloud_);
@@ -387,10 +396,10 @@ void ObstacleLayer::UpdateRaytraceBounds(double ox,
                                          double wx,
                                          double wy,
                                          double range,
-                                         double *min_x,
-                                         double *min_y,
-                                         double *max_x,
-                                         double *max_y) {
+                                         double* min_x,
+                                         double* min_y,
+                                         double* max_x,
+                                         double* max_y) {
   double dx = wx - ox, dy = wy - oy;
   double full_distance = hypot(dx, dy);
   double scale = std::min(1.0, range / full_distance);
@@ -401,10 +410,10 @@ void ObstacleLayer::UpdateRaytraceBounds(double ox,
 void ObstacleLayer::UpdateFootprint(double robot_x,
                                     double robot_y,
                                     double robot_yaw,
-                                    double *min_x,
-                                    double *min_y,
-                                    double *max_x,
-                                    double *max_y) {
+                                    double* min_x,
+                                    double* min_y,
+                                    double* max_x,
+                                    double* max_y) {
   if (!footprint_clearing_enabled_)
     return;
   TransformFootprint(robot_x, robot_y, robot_yaw, GetFootprint(), transformed_footprint_);

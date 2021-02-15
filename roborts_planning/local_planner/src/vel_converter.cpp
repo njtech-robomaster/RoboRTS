@@ -31,11 +31,12 @@ class VelConverter {
     cmd_vel_.linear.y = 0;
     cmd_vel_.angular.z = 0;
 
-    cmd_pub_ = cmd_handle_.advertise<geometry_msgs::Twist>("/cmd_vel", 5);
-    cmd_sub_ = cmd_handle_.subscribe<roborts_msgs::TwistAccel>("/cmd_vel_acc", 100, boost::bind(&VelConverter::VelCallback, this, _1));
+    cmd_pub_ = cmd_handle_.advertise<geometry_msgs::Twist>("local_planner_node/cmd_vel", 5);
+    cmd_sub_ = cmd_handle_.subscribe<roborts_msgs::TwistAccel>("local_planner_node/cmd_vel_acc", 100, boost::bind(&VelConverter::VelCallback, this, _1));
   }
   void VelCallback(const roborts_msgs::TwistAccel::ConstPtr& msg);
   void UpdateVel();
+  static bool IsZero(geometry_msgs::Twist msg);
 
  private:
   roborts_msgs::TwistAccel cmd_vel_acc_;
@@ -74,15 +75,31 @@ void VelConverter::UpdateVel() {
     time_begin_ = std::chrono::high_resolution_clock::now();
     return;
   }
-  auto actual_time = std::chrono::duration<double, std::ratio<1, 1>>(std::chrono::high_resolution_clock::now() - time_begin_).count();
+  auto actual_time =
+      std::chrono::duration<double, std::ratio<1, 1>>(
+          std::chrono::high_resolution_clock::now() - time_begin_)
+          .count();
   time_begin_ = std::chrono::high_resolution_clock::now();
 
-  cmd_vel_.linear.x = cmd_vel_.linear.x + actual_time * cmd_vel_acc_.accel.linear.x;
-  cmd_vel_.linear.y = cmd_vel_.linear.y + actual_time * cmd_vel_acc_.accel.linear.y;
-  cmd_vel_.angular.z = cmd_vel_.angular.z + actual_time * cmd_vel_acc_.accel.angular.z;
+  cmd_vel_.linear.x =
+      cmd_vel_.linear.x + actual_time * cmd_vel_acc_.accel.linear.x;
+  cmd_vel_.linear.y =
+      cmd_vel_.linear.y + actual_time * cmd_vel_acc_.accel.linear.y;
+  cmd_vel_.angular.z =
+      cmd_vel_.angular.z + actual_time * cmd_vel_acc_.accel.angular.z;
 
-  cmd_pub_.publish(cmd_vel_);
+  // TODO Need to change the way to publish the vel
+  if (!IsZero(cmd_vel_)) {
+    cmd_pub_.publish(cmd_vel_);
+  }
+}
 
+bool VelConverter::IsZero(geometry_msgs::Twist msg) {
+  if (msg.angular.z == 0 and msg.linear.x == 0 and msg.angular.y == 0) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 int main(int argc, char **argv)

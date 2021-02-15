@@ -1,3 +1,5 @@
+std_msgs/Header header
+
 #gimbal feedback angle data
 bool yaw_mode
 bool pitch_mode

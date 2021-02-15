@@ -5,6 +5,8 @@ set(CMAKE_BUILD_TYPE Release)
 file(GLOB ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/proto/*.proto")
 rrts_protobuf_generate_cpp(${CMAKE_CURRENT_SOURCE_DIR}/proto GlobalPlannerProtoSrc GlobalPlannerProtoHds ${ProtoFiles})
 
+find_package(roborts_msgs)
+
 include_directories(${catkin_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME}_node

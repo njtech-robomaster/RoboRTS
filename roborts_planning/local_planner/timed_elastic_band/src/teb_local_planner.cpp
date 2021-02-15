@@ -562,8 +562,12 @@ roborts_common::ErrorInfo TebLocalPlanner::Initialize (std::shared_ptr<roborts_c
     tf_ = tf;
     local_cost_ = local_cost;
 
+    ros::NodeHandle ns_nh;
+    std::string config_dir;
+    ns_nh.getParam("config_dir", config_dir);
+    std::cout << "!!!! Get config_dir:" << config_dir << std::endl;
     std::string full_path = ros::package::getPath("roborts_planning") + \
-      "/local_planner/timed_elastic_band/config/timed_elastic_band.prototxt";
+      "/local_planner/timed_elastic_band/config/" + config_dir + "/timed_elastic_band.prototxt";
     roborts_common::ReadProtoFromTextFile(full_path.c_str(), &param_config_);
     if (&param_config_ == nullptr) {
       ROS_ERROR("error occur when loading config file");

@@ -26,19 +26,19 @@
 
 using roborts_common::ErrorCode;
 
-class GlobalPlannerTest{
+class GlobalPlannerTest {
  public:
-  GlobalPlannerTest():
-      global_planner_actionlib_client_("global_planner_node_action", true){
+  GlobalPlannerTest() :
+      global_planner_actionlib_client_("global_planner_node_action", true) {
     ros::NodeHandle rviz_nh("move_base_simple");
     goal_sub_ = rviz_nh.subscribe<geometry_msgs::PoseStamped>("goal", 1,
-                                                              &GlobalPlannerTest::GoalCallback,this);
+                                                              &GlobalPlannerTest::GoalCallback, this);
 
     global_planner_actionlib_client_.waitForServer();
   }
   ~GlobalPlannerTest() = default;
 
-  void GoalCallback(const geometry_msgs::PoseStamped::ConstPtr & goal){
+  void GoalCallback(const geometry_msgs::PoseStamped::ConstPtr &goal) {
     ROS_INFO("Get new goal.");
     command_.goal = *goal;
     global_planner_actionlib_client_.sendGoal(command_,
@@ -48,13 +48,14 @@ class GlobalPlannerTest{
     );
   }
 
-  void DoneCallback(const actionlib::SimpleClientGoalState& state,  const roborts_msgs::GlobalPlannerResultConstPtr& result){
-    ROS_INFO("The goal is done with %s!",state.toString().c_str());
+  void DoneCallback(const actionlib::SimpleClientGoalState &state,
+                    const roborts_msgs::GlobalPlannerResultConstPtr &result) {
+    ROS_INFO("The goal is done with %s!", state.toString().c_str());
   }
   void ActiveCallback() {
     ROS_INFO("Action server has recived the goal, the goal is active!");
   }
-  void FeedbackCallback(const roborts_msgs::GlobalPlannerFeedbackConstPtr& feedback){
+  void FeedbackCallback(const roborts_msgs::GlobalPlannerFeedbackConstPtr &feedback) {
     if (feedback->error_code != ErrorCode::OK) {
       ROS_INFO("%s", feedback->error_msg.c_str());
     }

@@ -19,15 +19,19 @@
 
 #include "global_planner_node.h"
 
-namespace roborts_global_planner{
+namespace roborts_global_planner {
 
 using roborts_common::ErrorCode;
 using roborts_common::ErrorInfo;
 using roborts_common::NodeState;
-GlobalPlannerNode::GlobalPlannerNode() :
-    new_path_(false),pause_(false), node_state_(NodeState::IDLE), error_info_(ErrorCode::OK),
-    as_(nh_,"global_planner_node_action",boost::bind(&GlobalPlannerNode::GoalCallback,this,_1),false) {
 
+GlobalPlannerNode::GlobalPlannerNode()
+    : new_path_(false),
+      pause_(false),
+      node_state_(NodeState::IDLE),
+      error_info_(ErrorCode::OK),
+      as_(nh_, "global_planner_node_action",
+          boost::bind(&GlobalPlannerNode::GoalCallback, this, _1), false) {
   if (Init().IsOK()) {
     ROS_INFO("Global planner initialization completed.");
     StartPlanning();
@@ -36,24 +40,24 @@ GlobalPlannerNode::GlobalPlannerNode() :
     ROS_ERROR("Initialization failed.");
     SetNodeState(NodeState::FAILURE);
   }
-
 }
 
 ErrorInfo GlobalPlannerNode::Init() {
-
   // Load proto planning configuration parameters
   GlobalPlannerConfig global_planner_config;
-  std::string full_path = ros::package::getPath("roborts_planning") + "/global_planner/config/global_planner_config.prototxt";
+  std::string full_path =
+      ros::package::getPath("roborts_planning") +
+      "/global_planner/config/global_planner_config.prototxt";
   if (!roborts_common::ReadProtoFromTextFile(full_path.c_str(),
-                                           &global_planner_config)) {
+                                             &global_planner_config)) {
     ROS_ERROR("Cannot load global planner protobuf configuration file.");
     return ErrorInfo(ErrorCode::GP_INITILIZATION_ERROR,
                      "Cannot load global planner protobuf configuration file.");
   }
 
-
   selected_algorithm_ = global_planner_config.selected_algorithm();
-  cycle_duration_ = std::chrono::microseconds((int) (1e6 / global_planner_config.frequency()));
+  cycle_duration_ =
+      std::chrono::microseconds((int)(1e6 / global_planner_config.frequency()));
   max_retries_ = global_planner_config.max_retries();
   goal_distance_tolerance_ = global_planner_config.goal_distance_tolerance();
   goal_angle_tolerance_ = global_planner_config.goal_angle_tolerance();
@@ -65,59 +69,98 @@ ErrorInfo GlobalPlannerNode::Init() {
   // Create tf listener
   tf_ptr_ = std::make_shared<tf::TransformListener>(ros::Duration(10));
 
+  ros::NodeHandle ns_nh;
+  std::string config_dir;
+  ns_nh.getParam("config_dir", config_dir);
   // Create global costmap
-  std::string map_path = ros::package::getPath("roborts_costmap") + \
-      "/config/costmap_parameter_config_for_global_plan.prototxt";
-  costmap_ptr_ = std::make_shared<roborts_costmap::CostmapInterface>("global_costmap",
-                                                                           *tf_ptr_,
-                                                                           map_path.c_str());
+  std::string map_path = ros::package::getPath("roborts_costmap") + "/config/" +
+                         config_dir +
+                         "/costmap_parameter_config_for_global_plan.prototxt";
+  costmap_ptr_ = std::make_shared<roborts_costmap::CostmapInterface>(
+      "global_costmap", *tf_ptr_, map_path.c_str());
+  robot_id_ = config_dir;
+  if (robot_id_ == "red1") {
+    syne_robot_id_ = "red2";
+  } else if (robot_id_ == "red2") {
+    syne_robot_id_ = "red1";
+  } else if (robot_id_ == "blue1") {
+    syne_robot_id_ = "blue2";
+  } else if (robot_id_ == "blue2") {
+    syne_robot_id_ = "blue1";
+  }
+
   // Create the instance of the selected algorithm
-  global_planner_ptr_ = roborts_common::AlgorithmFactory<GlobalPlannerBase,CostmapPtr >::CreateAlgorithm(
-      selected_algorithm_, costmap_ptr_);
-  if (global_planner_ptr_== nullptr) {
+  global_planner_ptr_ = roborts_common::AlgorithmFactory<
+      GlobalPlannerBase, CostmapPtr>::CreateAlgorithm(selected_algorithm_,
+                                                      costmap_ptr_);
+  if (global_planner_ptr_ == nullptr) {
     ROS_ERROR("global planner algorithm instance can't be loaded");
     return ErrorInfo(ErrorCode::GP_INITILIZATION_ERROR,
                      "global planner algorithm instance can't be loaded");
   }
-
 
   // Initialize path frame from global costmap
   path_.header.frame_id = costmap_ptr_->GetGlobalFrameID();
   return ErrorInfo(ErrorCode::OK);
 }
 
-void GlobalPlannerNode::GoalCallback(const roborts_msgs::GlobalPlannerGoal::ConstPtr &msg) {
-
+void GlobalPlannerNode::GoalCallback(
+    const roborts_msgs::GlobalPlannerGoal::ConstPtr &msg) {
   ROS_INFO("Received a Goal from client!");
 
-  //Update current error and info
+  // Update current error and info
   ErrorInfo error_info = GetErrorInfo();
   NodeState node_state = GetNodeState();
 
-  //Set the current goal
+  // Set the current goal
   SetGoal(msg->goal);
 
-  //If the last state is not running, set it to running
+  // If the last state is not running, set it to running
   if (GetNodeState() != NodeState::RUNNING) {
     SetNodeState(NodeState::RUNNING);
   }
 
-  //Notify the condition variable to stop lock waiting the fixed duration
+  // Notify the condition variable to stop lock waiting the fixed duration
   {
     std::unique_lock<std::mutex> plan_lock(plan_mutex_);
     plan_condition_.notify_one();
   }
-
-
-
+  geometry_msgs::PoseStamped syne_robot_pose;
+  unsigned int syne_robot_x, syne_robot_y;
+  ros::NodeHandle nh;
+  auto update_current_index_client =
+      nh.serviceClient<roborts_msgs::UpdateCurrentIndex>(
+          "/update_current_index");
+  roborts_msgs::UpdateCurrentIndex update_current_index_srv;
   while (ros::ok()) {
     // Preempted and Canceled
+    if (costmap_ptr_->GetRobotPose(syne_robot_id_ + "/base_link",
+                                   syne_robot_pose)) {
+      if (costmap_ptr_->GetCostMap()->World2Map(syne_robot_pose.pose.position.x,
+                                                syne_robot_pose.pose.position.y,
+                                                syne_robot_x, syne_robot_y)) {
+        update_current_index_srv.request.robot_id = syne_robot_id_;
+        update_current_index_srv.request.index =
+            costmap_ptr_->GetCostMap()->GetIndex(syne_robot_x, syne_robot_y);
+        update_current_index_client.call(update_current_index_srv);
+      }
+    }
+    if (costmap_ptr_->GetRobotPose(robot_id_ + "/base_link", syne_robot_pose)) {
+      if (costmap_ptr_->GetCostMap()->World2Map(syne_robot_pose.pose.position.x,
+                                                syne_robot_pose.pose.position.y,
+                                                syne_robot_x, syne_robot_y)) {
+        update_current_index_srv.request.robot_id = robot_id_;
+        update_current_index_srv.request.index =
+            costmap_ptr_->GetCostMap()->GetIndex(syne_robot_x, syne_robot_y);
+        update_current_index_client.call(update_current_index_srv);
+      }
+    }
     if (as_.isPreemptRequested()) {
       if (as_.isNewGoalAvailable()) {
         as_.setPreempted();
         ROS_INFO("Override!");
         break;
-      }else{
+      } else {
         as_.setPreempted();
         SetNodeState(NodeState::IDLE);
         ROS_INFO("Cancel!");
@@ -128,8 +171,9 @@ void GlobalPlannerNode::GoalCallback(const roborts_msgs::GlobalPlannerGoal::Cons
     // Update the current state and error info
     node_state = GetNodeState();
     error_info = GetErrorInfo();
-    //TODO: seem useless to check state here, as it would never be IDLE state
-    if(node_state == NodeState::RUNNING || node_state == NodeState::SUCCESS || node_state == NodeState::FAILURE) {
+    // TODO: seem useless to check state here, as it would never be IDLE state
+    if (node_state == NodeState::RUNNING || node_state == NodeState::SUCCESS ||
+        node_state == NodeState::FAILURE) {
       roborts_msgs::GlobalPlannerFeedback feedback;
       roborts_msgs::GlobalPlannerResult result;
       // If error occurs or planner produce new path, publish the feedback
@@ -146,23 +190,22 @@ void GlobalPlannerNode::GoalCallback(const roborts_msgs::GlobalPlannerGoal::Cons
         as_.publishFeedback(feedback);
       }
 
-      // After get the result, deal with actionlib server and jump out of the loop
-      if(node_state == NodeState::SUCCESS){
+      // After get the result, deal with actionlib server and jump out of the
+      // loop
+      if (node_state == NodeState::SUCCESS) {
         result.error_code = error_info.error_code();
-        as_.setSucceeded(result,error_info.error_msg());
+        as_.setSucceeded(result, error_info.error_msg());
         SetNodeState(NodeState::IDLE);
         break;
-      }
-      else if(node_state == NodeState::FAILURE){
+      } else if (node_state == NodeState::FAILURE) {
         result.error_code = error_info.error_code();
-        as_.setAborted(result,error_info.error_msg());
+        as_.setAborted(result, error_info.error_msg());
         SetNodeState(NodeState::IDLE);
         break;
       }
     }
     std::this_thread::sleep_for(std::chrono::microseconds(1));
   }
-
 }
 
 NodeState GlobalPlannerNode::GetNodeState() {
@@ -219,27 +262,30 @@ void GlobalPlannerNode::PlanThread() {
     ROS_INFO("Wait to plan!");
     std::unique_lock<std::mutex> plan_lock(plan_mutex_);
     plan_condition_.wait_for(plan_lock, sleep_time);
-    while (GetNodeState()!=NodeState::RUNNING){
+    while (GetNodeState() != NodeState::RUNNING) {
       std::this_thread::sleep_for(std::chrono::microseconds(1));
     }
     ROS_INFO("Go on planning!");
 
-    std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point start_time =
+        std::chrono::steady_clock::now();
 
     {
-      std::unique_lock<roborts_costmap::Costmap2D::mutex_t> lock(*(costmap_ptr_->GetCostMap()->GetMutex()));
+      std::unique_lock<roborts_costmap::Costmap2D::mutex_t> lock(
+          *(costmap_ptr_->GetCostMap()->GetMutex()));
       bool error_set = false;
-      //Get the robot current pose
+      // Get the robot current pose
       while (!costmap_ptr_->GetRobotPose(current_start)) {
         if (!error_set) {
           ROS_ERROR("Get Robot Pose Error.");
-          SetErrorInfo(ErrorInfo(ErrorCode::GP_GET_POSE_ERROR, "Get Robot Pose Error."));
+          SetErrorInfo(
+              ErrorInfo(ErrorCode::GP_GET_POSE_ERROR, "Get Robot Pose Error."));
           error_set = true;
         }
         std::this_thread::sleep_for(std::chrono::microseconds(1));
       }
 
-      //Get the robot current goal and transform to the global frame
+      // Get the robot current goal and transform to the global frame
       current_goal = GetGoal();
 
       if (current_goal.header.frame_id != costmap_ptr_->GetGlobalFrameID()) {
@@ -247,67 +293,76 @@ void GlobalPlannerNode::PlanThread() {
         SetGoal(current_goal);
       }
 
-      //Plan
-      error_info = global_planner_ptr_->Plan(current_start, current_goal, current_path);
-
+      // Plan
+      error_info =
+          global_planner_ptr_->Plan(current_start, current_goal, current_path,
+                                    robot_id_, syne_robot_id_, clean_costmap);
     }
 
     if (error_info.IsOK()) {
-      //When planner succeed, reset the retry times
+      // When planner succeed, reset the retry times
       retries = 0;
       PathVisualization(current_path);
 
-      //Set the goal to avoid the same goal from getting transformed every time
+      // Set the goal to avoid the same goal from getting transformed every time
       current_goal = current_path.back();
       SetGoal(current_goal);
 
-      //Decide whether robot reaches the goal according to tolerance
-      if (GetDistance(current_start, current_goal) < goal_distance_tolerance_
-          && GetAngle(current_start, current_goal) < goal_angle_tolerance_
-          ) {
+      // Decide whether robot reaches the goal according to tolerance
+      if (GetDistance(current_start, current_goal) < goal_distance_tolerance_ &&
+          GetAngle(current_start, current_goal) < goal_angle_tolerance_) {
         SetNodeState(NodeState::SUCCESS);
       }
     } else if (max_retries_ > 0 && retries > max_retries_) {
-      //When plan failed to max retries, return failure
-      ROS_ERROR("Can not get plan with max retries( %d )", max_retries_ );
-      error_info = ErrorInfo(ErrorCode::GP_MAX_RETRIES_FAILURE, "Over max retries.");
+      // When plan failed to max retries, return failure
+      ROS_ERROR("Can not get plan with max retries( %d )", max_retries_);
+      // error_info = ErrorInfo(ErrorCode::GP_MAX_RETRIES_FAILURE, "Over max
+      // retries."); SetNodeState(NodeState::FAILURE);
+      retries = 0;
+    } else if (clean_costmap) {
+      ROS_ERROR("Try to clean the costmap!");
+      clean_costmap = false;
+      error_info = ErrorInfo(ErrorCode::GP_MAX_RETRIES_FAILURE,
+                             "Still failure after cleanning the costmap");
       SetNodeState(NodeState::FAILURE);
-      retries=0;
-    } else if (error_info == ErrorInfo(ErrorCode::GP_GOAL_INVALID_ERROR)){
-      //When goal is not reachable, return failure immediately
+      retries = 0;
+    } else if (error_info == ErrorInfo(ErrorCode::GP_GOAL_INVALID_ERROR)) {
+      // When goal is not reachable, return failure immediately
       ROS_ERROR("Current goal is not valid!");
       SetNodeState(NodeState::FAILURE);
-      retries=0;
-    }
-    else {
-      //Increase retries
+      retries = 0;
+    } else {
+      // Increase retries
       retries++;
-      ROS_ERROR("Can not get plan for once. %s", error_info.error_msg().c_str());
+      ROS_ERROR("Can not get plan for once. %s",
+                error_info.error_msg().c_str());
     }
     // Set and update the error info
     SetErrorInfo(error_info);
 
     // Deal with the duration to wait
-    std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point end_time =
+        std::chrono::steady_clock::now();
     std::chrono::microseconds execution_duration =
-        std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+        std::chrono::duration_cast<std::chrono::microseconds>(end_time -
+                                                              start_time);
     sleep_time = cycle_duration_ - execution_duration;
 
     // Report warning while planning timeout
     if (sleep_time <= std::chrono::microseconds(0)) {
       ROS_ERROR("The time planning once is %ld beyond the expected time %ld",
-                execution_duration.count(),
-                cycle_duration_.count());
+                execution_duration.count(), cycle_duration_.count());
       sleep_time = std::chrono::microseconds(0);
-      SetErrorInfo(ErrorInfo(ErrorCode::GP_TIME_OUT_ERROR, "Planning once time out."));
+      SetErrorInfo(
+          ErrorInfo(ErrorCode::GP_TIME_OUT_ERROR, "Planning once time out."));
     }
   }
-
 
   ROS_INFO("Plan thread terminated!");
 }
 
-void GlobalPlannerNode::PathVisualization(const std::vector<geometry_msgs::PoseStamped> &path) {
+void GlobalPlannerNode::PathVisualization(
+    const std::vector<geometry_msgs::PoseStamped> &path) {
   path_.poses = path;
   path_pub_.publish(path_);
   new_path_ = true;
@@ -332,14 +387,11 @@ double GlobalPlannerNode::GetAngle(const geometry_msgs::PoseStamped &pose1,
   return rot1.angleShortestPath(rot2);
 }
 
-GlobalPlannerNode::~GlobalPlannerNode() {
-  StopPlanning();
-}
+GlobalPlannerNode::~GlobalPlannerNode() { StopPlanning(); }
 
-} //namespace roborts_global_planner
+}  // namespace roborts_global_planner
 
 int main(int argc, char **argv) {
-
   ros::init(argc, argv, "global_planner_node");
   roborts_global_planner::GlobalPlannerNode global_planner;
   ros::spin();
