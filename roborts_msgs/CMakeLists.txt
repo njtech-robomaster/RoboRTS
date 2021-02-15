@@ -21,8 +21,25 @@ add_action_files(
 )
 
 add_message_files(
+        DIRECTORY msg/referee_system
+        FILES
+        BonusStatus.msg
+        GameResult.msg
+        GameStatus.msg
+        GameSurvivor.msg
+        ProjectileSupply.msg
+        RobotBonus.msg
+        RobotDamage.msg
+        RobotHeat.msg
+        RobotShoot.msg
+        RobotStatus.msg
+        SupplierStatus.msg
+)
+
+add_message_files(
         DIRECTORY msg
         FILES
+	BuffZoneStatus.msg
         TwistAccel.msg
         GimbalAngle.msg
         GimbalRate.msg
