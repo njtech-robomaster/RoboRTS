@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
     roborts_common
     roborts_msgs
     roborts_costmap
-    dynamic_reconfigure
+#    dynamic_reconfigure
     )
 
 find_package(Eigen3 REQUIRED)
@@ -48,9 +48,9 @@ rrts_protobuf_generate_cpp(${CMAKE_CURRENT_SOURCE_DIR}/proto
     )
 endif()
 
-generate_dynamic_reconfigure_options(
-    ../config/roborts_dynamic_cfg.cfg
-)
+#generate_dynamic_reconfigure_options(
+#    ../config/roborts_dynamic_cfg.cfg
+#)
 
 catkin_package()
 
@@ -114,8 +114,8 @@ add_executable(behavior_test_node
     executor/gimbal_executor.cpp
     executor/gimbal_control.h
     executor/gimbal_control.cpp
-    ../roborts_common/include/interface/dynamic_reconfigure_interface.h
-    ../roborts_common/include/interface/dynamic_reconfigure_interface.cpp
+#    ../roborts_common/include/interface/dynamic_reconfigure_interface.h
+#    ../roborts_common/include/interface/dynamic_reconfigure_interface.cpp
         behavior_test_node.cpp
         behavior_test_node.h)
 
