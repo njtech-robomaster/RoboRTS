@@ -20,6 +20,9 @@
 
 #include <iostream>
 #include <vector>
+#include <tuple>
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 #include <Eigen/Core>
 
@@ -427,6 +430,21 @@ inline double DistancePolygonToPolygon2D(const Polygon2D &polygon0,
   }
 
   return dist;
+}
+
+inline double AngleVectorToVector(const std::tuple<double, double> &vec0,
+                                  const std::tuple<double, double> &vec1) {
+  double x0 = std::get<0>(vec0),
+         y0 = std::get<1>(vec0),
+	 x1 = std::get<0>(vec1),
+	 y1 = std::get<1>(vec1);
+  double result = std::atan2(y1, x1) - std::atan2(y0, x0);
+  if (result < M_PI) {
+    result += M_PI * 2;
+  } else if (result > M_PI) {
+    result -= M_PI * 2;
+  }
+  return result;
 }
 
 } // namespace roborts_common
