@@ -216,7 +216,7 @@ ErrorInfo AStarPlanner::SearchPath(
       GetMoveCost(current_index, neighbor_index, move_cost);
       GetManhattanDistance(neighbor_index, goal_index, h_score);
 
-      if ((handled_index != -1 && !cell_infos.empty() &&
+      if ((handled_index != -1 && !cell_infos_.empty() &&
            GetEuclideanDistance(neighbor_index, handled_index) < 200 &&
            abs(g_score_.at(current_index) -
                cell_infos_.at(handled_index).cost_g) < 2500)) {
