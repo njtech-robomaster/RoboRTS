@@ -133,11 +133,10 @@ boost::shared_ptr<g2o::SparseOptimizer> TebOptimal::InitOptimizer() {
 
   boost::shared_ptr<g2o::SparseOptimizer> optimizer =
       boost::make_shared<g2o::SparseOptimizer>();
-  TebLinearSolver *linearSolver = new TebLinearSolver();
+  auto linearSolver = std::make_unique<TebLinearSolver>();
   linearSolver->setBlockOrdering(true);
-  TebBlockSolver *blockSolver = new TebBlockSolver(linearSolver);
-  g2o::OptimizationAlgorithmLevenberg *solver =
-      new g2o::OptimizationAlgorithmLevenberg(blockSolver);
+  auto blockSolver = std::make_unique<TebBlockSolver>(std::move(linearSolver));
+  g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(std::move(blockSolver));
 
   optimizer->setAlgorithm(solver);
 
