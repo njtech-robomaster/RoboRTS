@@ -239,10 +239,33 @@ class Polygon2D {
   std::vector<LineSegment2D> line_segments_;
   bool is_convex_ = false;
   double area_ = 0.0;
+ public:
   double min_x_ = 0.0;
   double max_x_ = 0.0;
   double min_y_ = 0.0;
   double max_y_ = 0.0;
+};
+
+class Zone : public Polygon2D {
+ public:
+  double zone_x_;
+  double zone_y_;
+  Zone(double max_x, double max_y, double min_x, double min_y)
+    : Polygon2D ({
+        {max_x, min_y},
+        {max_x, max_y},
+        {min_x, max_y},
+        {min_x, min_y}
+      }),
+      zone_x_ {(min_x + max_x) / 2.0},
+      zone_y_ {(min_y + max_y) / 2.0}
+  {}
+  double GetZoneX() const {
+    return zone_x_;
+  }
+  double GetZoneY() const {
+    return zone_y_;
+  }
 };
 
 } // namespace roborts_common
