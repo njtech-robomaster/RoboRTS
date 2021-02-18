@@ -24,7 +24,6 @@ class Field {
   const std::vector<std::pair<BuffZoneStatus, roborts_common::Zone>> &GetBuffZoneStatus() const;
   const std::vector<roborts_common::Zone> &getObstacles() const;
   const std::vector<roborts_common::Zone> &getWalls() const;
-  static std::vector<roborts_common::Polygon2D> TurnRectangulars(const std::vector<roborts_common::Zone> &zones) ;
 
   /**
    * Adjust the buff Zone is active

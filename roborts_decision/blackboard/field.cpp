@@ -92,11 +92,12 @@ Field::Field(const ros::NodeHandle &nh)
               .min_x_ = -0.5,
               .min_y_ = 1.105,
           },
-          {
-              .max_x_ = 0.125,
-              .max_y_ = 0.125,
-              .min_x_ = -0.125,
-              .min_y_ = -0.125,
+          { // the center obstacle (B5)
+              .max_x_ = 0.176776695, // 0.250/sqrt(2) = 0.176776695
+              .max_y_ = 0.176776695,
+              .min_x_ = -0.176776695,
+              .min_y_ = -0.176776695,
+	      .is_rotated = true,
           },
           {
               .max_x_ = 0.5,
@@ -170,32 +171,6 @@ const std::vector<roborts_common::Zone> &Field::getWalls() const {
   return walls_;
 }
 
-std::vector<roborts_common::Polygon2D> roborts_decision::Field::TurnRectangulars(const std::vector<roborts_common::Zone> &zones) {
-
-  std::vector<roborts_common::Polygon2D> rectangulars;
-
-  for (const auto &zone : zones) {
-
-    std::vector<roborts_common::Point2D> points;
-
-    if (zone.GetZoneX() == 0.001 && zone.GetZoneY() < 0.001) { // 判断是否是中间的障碍物(避免0判断错误）
-      points.emplace_back(zone.min_x_, (zone.min_y_ + zone.max_y_) / 2);    // 左
-      points.emplace_back((zone.max_x_ + zone.min_x_) / 2, zone.min_y_);    // 下
-      points.emplace_back(zone.max_x_, (zone.min_y_ + zone.max_y_) / 2);    // 右
-      points.emplace_back((zone.max_x_ + zone.min_x_) / 2, zone.max_y_);    // 上
-    } else {
-      points.emplace_back(zone.max_x_, zone.min_y_);
-      points.emplace_back(zone.max_x_, zone.max_y_);
-      points.emplace_back(zone.min_x_, zone.max_y_);
-      points.emplace_back(zone.min_x_, zone.min_y_);
-    }
-
-    rectangulars.emplace_back(points);
-  }
-
-  return rectangulars;
-}
-
 int Field::IsZoneActive(BuffStatus buff_status) {
   for (int i = 0; i < 6; i++) {
     if (this->vec_buff_zone_status_.at(i).first.buff_status == buff_status
@@ -213,7 +188,7 @@ Field::GetObstaclesBetweenTwoRobots(const roborts_common::Point2D point1, const 
 
   roborts_common::LineSegment2D tarLine(point1, point2);
 
-  for (const auto& obstacle : TurnRectangulars(this->getObstacles())) {
+  for (const auto& obstacle : this->getObstacles()) {
     for (const auto& line : obstacle.Lines()) {
       if (roborts_common::CheckLineSegmentsIntersection2D(tarLine, line)) {
         tarObstacles.push_back(obstacle);
@@ -235,10 +210,8 @@ bool Field::GetDisToObstacleSuitable(const roborts_common::Point2D &point){
   allObstacle.insert(allObstacle.begin(), this->getWalls().begin(), this->getWalls().end());
   allObstacle.insert(allObstacle.begin(), this->getObstacles().begin(), this->getObstacles().end());
 
-  std::vector<roborts_common::Polygon2D> posePolygon = Field::TurnRectangulars(allObstacle);
-
   double disMin = 1e5;
-  for (const auto &obstacleRectangular : posePolygon) {
+  for (const auto &obstacleRectangular : allObstacle) {
     double dis = roborts_common::DistancePointToPolygon2D(point, obstacleRectangular);
     if (dis < disMin){
       disMin = dis;

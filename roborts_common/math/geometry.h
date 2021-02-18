@@ -250,12 +250,12 @@ class Zone : public Polygon2D {
  public:
   double zone_x_;
   double zone_y_;
-  Zone(double max_x, double max_y, double min_x, double min_y)
+  Zone(double max_x, double max_y, double min_x, double min_y, bool is_rotated = false /* is the zone rotated 45 deg ? */)
     : Polygon2D ({
-        {max_x, min_y},
-        {max_x, max_y},
-        {min_x, max_y},
-        {min_x, min_y}
+        is_rotated ? Point2D{max_x, min_y} : Point2D{min_x, (min_y + max_y) / 2.0},
+        is_rotated ? Point2D{max_x, max_y} : Point2D{(min_x + max_x) / 2.0, min_y},
+        is_rotated ? Point2D{min_x, max_y} : Point2D{max_x, (min_y + max_y) / 2.0},
+        is_rotated ? Point2D{min_x, min_y} : Point2D{(min_x + max_x) / 2.0, max_y}
       }),
       zone_x_ {(min_x + max_x) / 2.0},
       zone_y_ {(min_y + max_y) / 2.0}

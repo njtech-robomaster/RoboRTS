@@ -712,7 +712,7 @@ void Blackboard::UpdateDefenseAllPotentialField(std::vector<std::vector<PointVal
                              });
 
   // 墙体、障碍物势场（防止离墙过近）
-  for (const auto &wall : Field::TurnRectangulars(this->field_->getWalls())) {
+  for (const auto &wall : this->field_->getWalls()) {
     this->UpdatePotentialField(security_matrix,
                                wall,
                                [this](const roborts_common::Point2D &point,
@@ -720,7 +720,7 @@ void Blackboard::UpdateDefenseAllPotentialField(std::vector<std::vector<PointVal
                                  return GetWallPotentialField(this->GetPointToEntityDistance(point, polygon2D));
                                });
   }
-  for (const auto &obstacle : Field::TurnRectangulars(this->field_->getObstacles())) {
+  for (const auto &obstacle : this->field_->getObstacles()) {
     this->UpdatePotentialField(security_matrix,
                                obstacle,
                                [this](const roborts_common::Point2D &point,
@@ -887,7 +887,7 @@ double Blackboard::GetDistanceWithObstacles(const roborts_common::Point2D &pose,
     roborts_common::LineSegment2D tar_line(roborts_common::Point2D(pose.X(), pose.Y()),
         roborts_common::Point2D((polygon_2_d.MaxX() + polygon_2_d.MinX()) / 2, (polygon_2_d.MaxY() + polygon_2_d.MinY()) / 2));
 
-    for (const auto &obstacleRectangular : Field::TurnRectangulars(this->field_->getObstacles())) {
+    for (const auto &obstacleRectangular : this->field_->getObstacles()) {
         for(auto line : obstacleRectangular.Lines()) {
             if (roborts_common::CheckLineSegmentsIntersection2D(line, tar_line)) {
                 distance = static_cast<double >(data::MAX);
@@ -1186,11 +1186,11 @@ bool Blackboard::IsCollide(const std::shared_ptr<MyRobot> p_my_robot) const {
   const roborts_common::Polygon2D kMyPolygon = this->GetHomePolygon(p_my_robot);
 
   // 撞墙
-  for(const auto& wall : this->field_->TurnRectangulars(this->field_->getWalls())) {
+  for(const auto& wall : this->field_->getWalls()) {
     if(roborts_common::DistancePolygonToPolygon2D(kMyPolygon, wall) < 0.01)
       return true;
   }
-  for(const auto& obstacle : this->field_->TurnRectangulars(this->field_->getObstacles())) {
+  for(const auto& obstacle : this->field_->getObstacles()) {
     if(roborts_common::DistancePolygonToPolygon2D(kMyPolygon, obstacle) < 0.01)
       return true;
   }
