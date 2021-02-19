@@ -194,7 +194,23 @@ class Polygon2D {
     num_points_ = points_.size();
     line_segments_.reserve(num_points_);
 
+    if (num_points_ > 0) {
+      min_x_ = max_x_ = points_[0].X();
+      min_y_ = max_y_ = points_[0].Y();
+    }
+
     for (int i = 1; i < num_points_; ++i) {
+      if (points_[i].X() > max_x_) {
+        max_x_ = points_[i].X();
+      } else if (points_[i].X() < min_x_) {
+        min_x_ = points_[i].X();
+      }
+      if (points_[i].Y() > max_y_) {
+        max_y_ = points_[i].Y();
+      } else if (points_[i].Y() < min_y_) {
+        min_y_ = points_[i].Y();
+      }
+
       auto vector0 = points_[i - 1] - points_[0];
       auto vector1 = points_[i] - points_[0];
       area_ += vector0.X() * vector1.Y() - vector0.Y() * vector1.X();
