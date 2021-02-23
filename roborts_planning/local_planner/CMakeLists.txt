@@ -78,3 +78,12 @@ target_link_libraries(vel_converter
   )
 add_dependencies(vel_converter
   roborts_msgs_generate_messages)
+
+add_executable(local_planner_test
+  src/local_planner_test.cpp)
+target_link_libraries(local_planner_test
+  PRIVATE
+  ${catkin_LIBRARIES}
+  )
+add_dependencies(local_planner_test
+  roborts_msgs_generate_messages)
