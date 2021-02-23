@@ -17,7 +17,7 @@ using roborts_common::ErrorCode;
 class LocalPlannerTest {
  public:
   LocalPlannerTest() :
-      local_planner_actionlib_client_("local_planner_node/local_planner_node_action", true) {
+      local_planner_actionlib_client_("local_planner_node_action", true) {
     ros::NodeHandle global_planner_nh("global_planner_node");
     global_path_sub_ =
         global_planner_nh.subscribe<nav_msgs::Path>("path", 1, &LocalPlannerTest::GlobalPathCallback, this);
