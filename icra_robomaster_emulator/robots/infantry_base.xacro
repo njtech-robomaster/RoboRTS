@@ -450,7 +450,7 @@
         <link name="laser_link"/>
         <joint name="base_link_to_laser_joint" type="fixed">
             <origin
-                    xyz="0.0 0 -0.1"
+                    xyz="0.0 0 0.022"
                     rpy="4.8881E-16 -3.1415926 1.57"/>
             <parent
                     link="reverse_base_link"/>
