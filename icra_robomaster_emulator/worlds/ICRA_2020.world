@@ -543,10 +543,10 @@
         <collision name='Wall_88_Collision'>
           <geometry>
             <box>
-              <size>0.8 0.075 0.15</size>
+              <size>0.8 0.2 0.15</size>
             </box>
           </geometry>
-          <pose frame=''>0 0 0.2 0 -0 0</pose>
+          <pose frame=''>0 0 0.075 0 -0 0</pose>
           <max_contacts>10</max_contacts>
           <surface>
             <contact>
