@@ -1332,9 +1332,9 @@
     <!-- To generate 2D perfect map -->
     <plugin name='gazebo_occupancy_map' filename='libgazebo_2Dmap_plugin.so'>
       <map_resolution>0.05</map_resolution>
-      <map_height>0.235</map_height>
-      <map_size_x>10</map_size_x>
-      <map_size_y>10</map_size_y>
+      <map_height>0.253</map_height>
+      <map_size_x>8.45</map_size_x>
+      <map_size_y>8.45</map_size_y>
     </plugin>
   </world>
 </sdf>
