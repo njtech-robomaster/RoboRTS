@@ -33,10 +33,178 @@
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
-    <model name='wall'>
+    <model name='obstacles'>
       <pose frame='world'>0.0 0.0 0 0 -0 0</pose>
-      <link name='Wall_100'>
-        <collision name='Wall_100_Collision'>
+      <link name='wall_north'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>8.42 0.17 0.5</size>
+            </box>
+          </geometry>
+          <pose frame=''>0 0 0.25 0 -0 0</pose>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <pose frame=''>0 0 0.25 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>8.42 0.17 0.5</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+            <ambient>1 1 1 1</ambient>
+          </material>
+        </visual>
+        <pose frame=''>0 2.325 0 0 -0 1.5e-05</pose>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+      </link>
+      <link name='wall_east'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>4.820 0.17 0.5</size>
+            </box>
+          </geometry>
+          <pose frame=''>0 0 0.25 0 -0 0</pose>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <pose frame=''>0 0 0.25 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>4.820 0.17 0.5</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+            <ambient>1 1 1 1</ambient>
+          </material>
+        </visual>
+        <pose frame=''>4.125 0.000000 0 0 0 -1.5708</pose>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+      </link>
+      <link name='wall_south'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>8.420 0.17 0.5</size>
+            </box>
+          </geometry>
+          <pose frame=''>0 0 0.25 0 -0 0</pose>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <pose frame=''>0 0 0.25 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>8.420 0.17 0.5</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+            <ambient>1 1 1 1</ambient>
+          </material>
+        </visual>
+        <pose frame=''>0 -2.325 0 0 0 -3.14158</pose>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+      </link>
+      <link name='wall_west'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>4.820 0.17 0.5</size>
+            </box>
+          </geometry>
+          <pose frame=''>0 0 0.25 0 -0 0</pose>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <pose frame=''>0 0 0.25 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>4.820 0.17 0.5</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+            <ambient>1 1 1 1</ambient>
+          </material>
+        </visual>
+        <pose frame=''>-4.125 -0.000000 0 0 0 -1.5708</pose>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+      </link>
+      <link name='obstacle_b5'>
+        <collision name='collision'>
           <geometry>
             <box>
               <size>0.25 0.25 0.15</size>
@@ -57,7 +225,7 @@
             </friction>
           </surface>
         </collision>
-        <visual name='Wall_100_Visual'>
+        <visual name='visual'>
           <pose frame=''>0 0 0.075 0 -0 0</pose>
           <geometry>
             <box>
@@ -77,179 +245,11 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <link name='Wall_45'>
-        <collision name='Wall_45_Collision'>
+      <link name='obstacle_b1'>
+        <collision name='collision'>
           <geometry>
             <box>
-              <size>8.485 0.2 0.5</size>
-            </box>
-          </geometry>
-          <pose frame=''>0 0 0.25 0 -0 0</pose>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
-        <visual name='Wall_45_Visual'>
-          <pose frame=''>0 0 0.25 0 -0 0</pose>
-          <geometry>
-            <box>
-              <size>8.485 0.2 0.5</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Grey</name>
-            </script>
-            <ambient>1 1 1 1</ambient>
-          </material>
-        </visual>
-        <pose frame=''>0 2.340000 0 0 -0 1.5e-05</pose>
-        <self_collide>0</self_collide>
-        <kinematic>0</kinematic>
-        <gravity>1</gravity>
-      </link>
-      <link name='Wall_54'>
-        <collision name='Wall_54_Collision'>
-          <geometry>
-            <box>
-              <size>4.885 0.2 0.5</size>
-            </box>
-          </geometry>
-          <pose frame=''>0 0 0.25 0 -0 0</pose>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
-        <visual name='Wall_54_Visual'>
-          <pose frame=''>0 0 0.25 0 -0 0</pose>
-          <geometry>
-            <box>
-              <size>4.885 0.2 0.5</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Grey</name>
-            </script>
-            <ambient>1 1 1 1</ambient>
-          </material>
-        </visual>
-        <pose frame=''>4.140000 0.000000 0 0 0 -1.5708</pose>
-        <self_collide>0</self_collide>
-        <kinematic>0</kinematic>
-        <gravity>1</gravity>
-      </link>
-      <link name='Wall_56'>
-        <collision name='Wall_56_Collision'>
-          <geometry>
-            <box>
-              <size>8.485 0.2 0.5</size>
-            </box>
-          </geometry>
-          <pose frame=''>0 0 0.25 0 -0 0</pose>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
-        <visual name='Wall_56_Visual'>
-          <pose frame=''>0 0 0.25 0 -0 0</pose>
-          <geometry>
-            <box>
-              <size>8.485 0.2 0.5</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Grey</name>
-            </script>
-            <ambient>1 1 1 1</ambient>
-          </material>
-        </visual>
-        <pose frame=''>0 -2.340000 0 0 0 -3.14158</pose>
-        <self_collide>0</self_collide>
-        <kinematic>0</kinematic>
-        <gravity>1</gravity>
-      </link>
-      <link name='Wall_58'>
-        <collision name='Wall_58_Collision'>
-          <geometry>
-            <box>
-              <size>4.885 0.2 0.5</size>
-            </box>
-          </geometry>
-          <pose frame=''>0 0 0.25 0 -0 0</pose>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
-        <visual name='Wall_58_Visual'>
-          <pose frame=''>0 0 0.25 0 -0 0</pose>
-          <geometry>
-            <box>
-              <size>4.885 0.2 0.5</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Grey</name>
-            </script>
-            <ambient>1 1 1 1</ambient>
-          </material>
-        </visual>
-        <pose frame=''>-4.140000 -0.000000 0 0 0 -1.5708</pose>
-        <self_collide>0</self_collide>
-        <kinematic>0</kinematic>
-        <gravity>1</gravity>
-      </link>
-      <link name='Wall_74'>
-        <collision name='Wall_74_Collision'>
-          <geometry>
-            <box>
-              <size>1.05 0.2 0.4</size>
+              <size>1.0 0.2 0.4</size>
             </box>
           </geometry>
           <pose frame=''>0 0 0.2 0 -0 0</pose>
@@ -267,11 +267,11 @@
             </friction>
           </surface>
         </collision>
-        <visual name='Wall_74_Visual'>
+        <visual name='visual'>
           <pose frame=''>0 0 0.2 0 -0 0</pose>
           <geometry>
             <box>
-              <size>1.05 0.2 0.4</size>
+              <size>1.0 0.2 0.4</size>
             </box>
           </geometry>
           <material>
@@ -287,8 +287,8 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <link name='Wall_76'>
-        <collision name='Wall_76_Collision'>
+      <link name='obstacle_b3'>
+        <collision name='collision'>
           <geometry>
             <box>
               <size>1 0.2 0.4</size>
@@ -309,7 +309,7 @@
             </friction>
           </surface>
         </collision>
-        <visual name='Wall_76_Visual'>
+        <visual name='visual'>
           <pose frame=''>0 0 0.2 0 -0 0</pose>
           <geometry>
             <box>
@@ -329,8 +329,8 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <link name='Wall_78'>
-        <collision name='Wall_78_Collision'>
+      <link name='obstacle_b9'>
+        <collision name='collision'>
           <geometry>
             <box>
               <size>1 0.2 0.4</size>
@@ -351,7 +351,7 @@
             </friction>
           </surface>
         </collision>
-        <visual name='Wall_78_Visual'>
+        <visual name='visual'>
           <pose frame=''>0 0 0.2 0 -0 0</pose>
           <geometry>
             <box>
@@ -371,8 +371,8 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <link name='Wall_80'>
-        <collision name='Wall_80_Collision'>
+      <link name='obstacle_b7'>
+        <collision name='collision'>
           <geometry>
             <box>
               <size>1 0.2 0.4</size>
@@ -393,7 +393,7 @@
             </friction>
           </surface>
         </collision>
-        <visual name='Wall_80_Visual'>
+        <visual name='visual'>
           <pose frame=''>0 0 0.2 0 -0 0</pose>
           <geometry>
             <box>
@@ -413,8 +413,8 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <link name='Wall_82'>
-        <collision name='Wall_82_Collision'>
+      <link name='obstacle_b4'>
+        <collision name='collision'>
           <geometry>
             <box>
               <size>1 0.2 0.4</size>
@@ -435,7 +435,7 @@
             </friction>
           </surface>
         </collision>
-        <visual name='Wall_82_Visual'>
+        <visual name='visual'>
           <pose frame=''>0 0 0.2 0 -0 0</pose>
           <geometry>
             <box>
@@ -455,8 +455,8 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <link name='Wall_84'>
-        <collision name='Wall_84_Collision'>
+      <link name='obstacle_b6'>
+        <collision name='collision'>
           <geometry>
             <box>
               <size>1 0.2 0.4</size>
@@ -477,7 +477,7 @@
             </friction>
           </surface>
         </collision>
-        <visual name='Wall_84_Visual'>
+        <visual name='visual'>
           <pose frame=''>0 0 0.2 0 -0 0</pose>
           <geometry>
             <box>
@@ -497,8 +497,8 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <link name='Wall_86'>
-        <collision name='Wall_86_Collision'>
+      <link name='obstacle_b2'>
+        <collision name='collision'>
           <geometry>
             <box>
               <size>0.8 0.2 0.15</size>
@@ -519,7 +519,7 @@
             </friction>
           </surface>
         </collision>
-        <visual name='Wall_86_Visual'>
+        <visual name='visual'>
           <pose frame=''>0 0 0.075 0 -0 0</pose>
           <geometry>
             <box>
@@ -539,8 +539,8 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <link name='Wall_88'>
-        <collision name='Wall_88_Collision'>
+      <link name='obstacle_b8'>
+        <collision name='collision'>
           <geometry>
             <box>
               <size>0.8 0.2 0.15</size>
@@ -561,7 +561,7 @@
             </friction>
           </surface>
         </collision>
-        <visual name='Wall_88_Visual'>
+        <visual name='visual'>
           <pose frame=''>0 0 0.075 0 -0 0</pose>
           <geometry>
             <box>
@@ -599,13 +599,13 @@
         <projection_type>perspective</projection_type>
       </camera>
     </gui>
-    <model name='pole_0'>
+    <model name='lookout_d4'>
       <pose frame='world'>4.12 2.32 0 0 -0 0</pose>
-      <link name='Wall_0'>
-        <collision name='Wall_0_Collision'>
+      <link name='pole'>
+        <collision name='collision'>
           <geometry>
             <box>
-              <size>0.16 0.15 1.808</size>
+              <size>0.16 0.15 1.768</size>
             </box>
           </geometry>
           <pose frame=''>0 0 0.904 0 -0 0</pose>
@@ -623,11 +623,11 @@
             </friction>
           </surface>
         </collision>
-        <visual name='Wall_0_Visual'>
+        <visual name='visual'>
           <pose frame=''>0 0 0.904 0 -0 0</pose>
           <geometry>
             <box>
-              <size>0.16 0.15 1.808</size>
+              <size>0.16 0.15 1.768</size>
             </box>
           </geometry>
           <material>
@@ -645,13 +645,13 @@
       </link>
       <static>1</static>
     </model>
-    <model name='pole_1'>
+    <model name='lookout_d3'>
       <pose frame='world'>4.12 -2.32 0 0 -0 0</pose>
-      <link name='Wall_0'>
-        <collision name='Wall_0_Collision'>
+      <link name='pole'>
+        <collision name='collision'>
           <geometry>
             <box>
-              <size>0.16 0.15 1.808</size>
+              <size>0.16 0.15 1.768</size>
             </box>
           </geometry>
           <pose frame=''>0 0 0.904 0 -0 0</pose>
@@ -669,11 +669,11 @@
             </friction>
           </surface>
         </collision>
-        <visual name='Wall_0_Visual'>
+        <visual name='visual'>
           <pose frame=''>0 0 0.904 0 -0 0</pose>
           <geometry>
             <box>
-              <size>0.16 0.15 1.808</size>
+              <size>0.16 0.15 1.768</size>
             </box>
           </geometry>
           <material>
@@ -691,13 +691,13 @@
       </link>
       <static>1</static>
     </model>
-    <model name='pole_2'>
+    <model name='lookout_d2'>
       <pose frame='world'>-4.12 -2.32 0 0 -0 0</pose>
-      <link name='Wall_0'>
-        <collision name='Wall_0_Collision'>
+      <link name='pole'>
+        <collision name='collision'>
           <geometry>
             <box>
-              <size>0.16 0.15 1.808</size>
+              <size>0.16 0.15 1.768</size>
             </box>
           </geometry>
           <pose frame=''>0 0 0.904 0 -0 0</pose>
@@ -715,11 +715,11 @@
             </friction>
           </surface>
         </collision>
-        <visual name='Wall_0_Visual'>
+        <visual name='visual'>
           <pose frame=''>0 0 0.904 0 -0 0</pose>
           <geometry>
             <box>
-              <size>0.16 0.15 1.808</size>
+              <size>0.16 0.15 1.768</size>
             </box>
           </geometry>
           <material>
@@ -737,13 +737,13 @@
       </link>
       <static>1</static>
     </model>
-    <model name='pole_3'>
+    <model name='lookout_d1'>
       <pose frame='world'>-4.12 2.32 0 0 -0 0</pose>
-      <link name='Wall_0'>
-        <collision name='Wall_0_Collision'>
+      <link name='pole'>
+        <collision name='collision'>
           <geometry>
             <box>
-              <size>0.16 0.15 1.808</size>
+              <size>0.16 0.15 1.768</size>
             </box>
           </geometry>
           <pose frame=''>0 0 0.904 0 -0 0</pose>
@@ -761,11 +761,11 @@
             </friction>
           </surface>
         </collision>
-        <visual name='Wall_0_Visual'>
+        <visual name='visual'>
           <pose frame=''>0 0 0.904 0 -0 0</pose>
           <geometry>
             <box>
-              <size>0.16 0.15 1.808</size>
+              <size>0.16 0.15 1.768</size>
             </box>
           </geometry>
           <material>
@@ -783,7 +783,7 @@
       </link>
       <static>1</static>
     </model>
-    <model name='outpost-camera_0'>
+    <model name='lookout_d4_camera'>
       <link name='camera_link'>
         <pose frame=''>0 0 -0 0 -0 0</pose>
         <inertial>
@@ -803,7 +803,7 @@
         <velocity_decay/>
         <sensor name='camera_node' type='camera'>
           <update_rate>30</update_rate>
-          <camera name='outpost-camera_0'>
+          <camera name='lookout_d4_camera'>
             <horizontal_fov>1.39626</horizontal_fov>
             <image>
               <width>1280</width>
@@ -905,9 +905,9 @@
       </link>
       <static>1</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose frame='world'>4.04 2.24 1.808 0 0.25 -2.355</pose>
+      <pose frame='world'>4.04 2.24 1.768 0 0.25 -2.355</pose>
     </model>
-    <model name='outpost-camera_1'>
+    <model name='lookout_d3_camera'>
       <link name='camera_link'>
         <pose frame='world'>0 0 -0 0 -0 0</pose>
         <inertial>
@@ -927,7 +927,7 @@
         <velocity_decay/>
         <sensor name='camera_node' type='camera'>
           <update_rate>30</update_rate>
-          <camera name='outpost-camera_1'>
+          <camera name='lookout_d3_camera'>
             <horizontal_fov>1.39626</horizontal_fov>
             <image>
               <width>1280</width>
@@ -1029,9 +1029,9 @@
       </link>
       <static>1</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose frame='world'>4.04 -2.24 1.808 0 0.25 2.355</pose>
+      <pose frame='world'>4.04 -2.24 1.768 0 0.25 2.355</pose>
     </model>
-    <model name='outpost-camera_2'>
+    <model name='lookout_d2_camera'>
       <link name='camera_link'>
         <pose frame=''>0 0 -0 0 -0 0</pose>
         <inertial>
@@ -1051,7 +1051,7 @@
         <velocity_decay/>
         <sensor name='camera_node' type='camera'>
           <update_rate>30</update_rate>
-          <camera name='outpost-camera_2'>
+          <camera name='lookout_d2_camera'>
             <horizontal_fov>1.39626</horizontal_fov>
             <image>
               <width>1280</width>
@@ -1153,9 +1153,9 @@
       </link>
       <static>1</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose frame='world'>-4.04 -2.24 1.808 0 0.25 0.785</pose>
+      <pose frame='world'>-4.04 -2.24 1.768 0 0.25 0.785</pose>
     </model>
-    <model name='outpost-camera_3'>
+    <model name='lookout_d1_camera'>
       <link name='camera_link'>
         <pose frame=''>0 0 -0 0 -0 0</pose>
         <inertial>
@@ -1175,7 +1175,7 @@
         <velocity_decay/>
         <sensor name='camera_node' type='camera'>
           <update_rate>30</update_rate>
-          <camera name='camera-camera_3'>
+          <camera name='lookout_d1_camera'>
             <horizontal_fov>1.39626</horizontal_fov>
             <image>
               <width>1280</width>
@@ -1277,7 +1277,7 @@
       </link>
       <static>1</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose frame='world'>-4.04 2.24 1.808 0 0.25 -0.785</pose>
+      <pose frame='world'>-4.04 2.24 1.768 0 0.25 -0.785</pose>
     </model>
     <model name='icra_ground_plane'>
       <static>1</static>
@@ -1286,7 +1286,7 @@
           <geometry>
             <plane>
               <normal>0 0 1</normal>
-              <size>8.48 4.88</size>
+              <size>8.42 4.82</size>
             </plane>
           </geometry>
           <surface>
@@ -1311,7 +1311,7 @@
           <geometry>
             <plane>
               <normal>0 0 1</normal>
-              <size>8.48 4.88</size>
+              <size>8.42 4.82</size>
             </plane>
           </geometry>
           <material>
