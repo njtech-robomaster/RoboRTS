@@ -27,11 +27,19 @@
   <!-- Run the localization node -->
   <node pkg="roborts_localization" type="localization_node" name="localization_node" respawn="false" />
 
-  <!-- Run the global planner node -->
-  <node pkg="roborts_planning" type="global_planner_node" name="global_planner_node" respawn="false" />
+  <group>
+    <remap from="map" to="planning_map" />
+    <remap from="map_metadata" to="planning_map_metadata" />
+    <remap from="static_map" to="planning_static_map" />
 
-  <!-- Run the local planner node -->
-  <node pkg="roborts_planning" type="local_planner_node" name="local_planner_node" respawn="false" />
+    <node name="planning_map_server" pkg="map_server" type="map_server" args="$(find roborts_bringup)/maps/$(arg map)-full.yaml" respawn="false" />
+
+    <!-- Run the global planner Node -->
+    <node pkg="roborts_planning" type="global_planner_node" name="global_planner_node" respawn="false" />
+
+    <!-- Run the local planner node -->
+    <node pkg="roborts_planning" type="local_planner_node" name="local_planner_node" respawn="false" />
+  </group>
 
 </launch>
 
