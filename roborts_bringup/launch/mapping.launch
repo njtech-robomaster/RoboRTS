@@ -1,8 +1,6 @@
+<?xml version="1.0"?>
 <launch>
-  <master auto="start"/>
-  <include file="$(find roborts_bringup)/launch/base.launch" />
-  <include file="$(find roborts_bringup)/launch/lidar.launch" />
-  <include file="$(find roborts_bringup)/launch/slam.launch"/>
-  <include file="$(find roborts_bringup)/launch/static_tf.launch" />
+	<include file="$(find roborts_bringup)/launch/base.launch" pass_all_args="true" />
+	<include file="$(find roborts_bringup)/launch/lidar.launch" pass_all_args="true" />
+	<include file="$(find roborts_bringup)/launch/slam.launch" pass_all_args="true" />
 </launch>
-

@@ -74,8 +74,8 @@ define rplidar ranger
 (
   sensor(
     range_max 8.0
-    fov 270
-    samples 270
+    fov 360
+    samples 360
   )
 )
 
@@ -86,7 +86,7 @@ define rmcar position
   gui_nose 1
   drive "omni"
   # frontcamera(pose [ 0 0 0 0 ])
-  rplidar(pose [ 0 0 -0.229 0 ])
+  rplidar(pose [ 0 0 -0.229 180 ])
   odom_error [0.03 0.03 0.00 0.05]
   # [ xmin xmax ymin ymax zmin zmax amin amax ]
   velocity_bounds [-2 2 -2 2 -2 2 -90 90 ]

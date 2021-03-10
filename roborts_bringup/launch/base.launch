@@ -1,9 +1,11 @@
+<?xml version="1.0"?>
 <launch>
-  <master auto="start"/>
-  <rosparam command="load" file="$(find roborts_base)/config/roborts_base_parameter.yaml" />
+	<arg name="in_simulation" default="false" />
 
-  <!-- Run the Base Node -->
-  <node pkg="roborts_base" type="roborts_base_node" name="roborts_base_node" output="screen" respawn="true" />
+	<node pkg="roborts_base" type="roborts_base_node" name="roborts_base_node" output="screen" respawn="true" unless="$(arg in_simulation)" />
 
+	<node pkg="tf2_ros" type="static_transform_publisher" name="base_link_base_laser_link_broadcaster"
+		args="0.20 0.0 0.27 3.14 0.0 0.0 base_link laser_link" />
+	<node pkg="tf2_ros" type="static_transform_publisher" name="base_link_camera_link_broadcaster"
+		args="0.0  0.0 0.0  0.0  0.0 0.0 base_link camera" /> <!-- TODO: adjust this -->
 </launch>
-
