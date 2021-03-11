@@ -7,8 +7,8 @@
 	<rosparam command="load" file="$(find roborts_localization)/config/localization.yaml" />
 	<rosparam command="load" file="$(find roborts_localization)/amcl/config/amcl.yaml" />
 
-	<include file="$(find roborts_bringup)/launch/base.launch" pass_all_args="true" />
-	<include file="$(find roborts_bringup)/launch/lidar.launch" pass_all_args="true" />
+	<include file="$(find roborts_bringup)/launch/real_robot.launch" />
+	<include file="$(find roborts_bringup)/launch/laser_filter.launch" />
 
 	<node name="map_server" pkg="map_server" type="map_server" args="$(find roborts_bringup)/maps/$(arg map).yaml" respawn="false" />
 

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-	<include file="$(find roborts_bringup)/launch/base.launch" pass_all_args="true" />
-	<include file="$(find roborts_bringup)/launch/lidar.launch" pass_all_args="true" />
-	<include file="$(find roborts_bringup)/launch/slam.launch" pass_all_args="true" />
+	<include file="$(find roborts_bringup)/launch/real_robot.launch" />
+	<include file="$(find roborts_bringup)/launch/laser_filter.launch" />
+	<include file="$(find roborts_bringup)/launch/slam.launch" />
 </launch>

@@ -1,11 +1,10 @@
 <?xml version="1.0"?>
 <launch>
-	<arg name="in_simulation" value="true" />
 	<param name="/use_sim_time" value="true" />
 
-	<include file="$(find roborts_bringup)/launch/stage.launch" pass_all_args="true" />
-	<include file="$(find roborts_bringup)/launch/mapping.launch" pass_all_args="true" />
+	<include file="$(find roborts_bringup)/launch/stage.launch" />
+	<include file="$(find roborts_bringup)/launch/laser_filter.launch" />
+	<include file="$(find roborts_bringup)/launch/slam.launch" />
 
 	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find roborts_bringup)/rviz/mapping.rviz" />
-
 </launch>
