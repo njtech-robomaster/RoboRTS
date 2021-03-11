@@ -6,7 +6,7 @@ obstacle_range: 5
 raytrace_range: 5
 transform_tolerance: 0.3
 topic_string: "scan"
-sensor_frame: "base_laser_link"
+sensor_frame: "laser_link"
 inf_is_valid: false
 clearing: true
 footprint_clearing_enabled: false

@@ -5,4 +5,6 @@
 		<param name="base_watchdog_timeout" value="0.01" />
 	</node>
 	<node pkg="roborts_planning" type="vel_converter" name="vel_converter_node" respawn="false" />
+	<node pkg="tf2_ros" type="static_transform_publisher" name="stageros_base_laser_link_remapper"
+		args="0 0 0 0 0 0 base_laser_link laser_link" />
 </launch>
