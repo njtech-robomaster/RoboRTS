@@ -107,5 +107,5 @@ window
 )
 
 # throw in a robot
-rmcar(pose [ -1 -1 0 0 ] name "rmcar0" color "blue" )
+rmcar(pose [ 3.47 -1.75 0 180 ] name "red1" color "red" )
 
