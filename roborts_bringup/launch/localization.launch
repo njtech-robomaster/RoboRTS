@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+	<arg name="initial_pose_x" default="3.47" />
+	<arg name="initial_pose_y" default="-1.75" />
+	<arg name="initial_pose_a" default="-3.141592654" />
+	<node pkg="amcl" type="amcl" name="amcl">
+		<param name="use_map_topic" value="true" />
+		<param name="odom_model_type" value="omni-corrected" />
+		<param name="initial_pose_x" value="$(eval initial_pose_x)" />
+		<param name="initial_pose_y" value="$(eval initial_pose_y)" />
+		<param name="initial_pose_a" value="$(eval -initial_pose_a)" />
+
+		<param name="laser_min_range" value="0.15" />
+		<param name="laser_max_range" value="8.0" />
+		<param name="min_particles" value="500" />
+		<param name="laser_z_hit" value="0.5" />
+		<param name="laser_z_rand" value="0.5" />
+		<param name="laser_sigma_hit" value="0.2" />
+		<param name="laser_lambda_short" value="0.1" />
+		<param name="laser_likelihood_max_dist" value="5.0" />
+		<param name="odom_alpha1" value="0.005" />
+		<param name="odom_alpha2" value="0.005" />
+		<param name="update_min_d" value="0.05" />
+		<param name="update_min_a" value="0.01" />
+		<param name="recovery_alpha_slow" value="0.001" />
+		<param name="recovery_alpha_fast" value="0.1" />
+	</node>
+</launch>
