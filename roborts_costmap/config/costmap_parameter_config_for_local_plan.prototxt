@@ -3,7 +3,7 @@ para_basic {
   is_debug: true
 }
 para_costmap_interface {
-  global_frame: "odom"
+  global_frame: "map"
   robot_base_frame: "base_link"
   footprint_padding: 0.05
   transform_tolerance: 1.0
@@ -22,19 +22,19 @@ para_costmap_interface {
 }
 footprint {
   point {
-    x: -0.3
-    y: -0.225
+    x: -0.2975
+    y: 0.2500
   }
   point {
-    x: -0.3
-    y: 0.225
+    x: 0.2975
+    y: 0.2500
   }
   point {
-    x: 0.3
-    y: 0.225
+    x: 0.2975
+    y: -0.2500
   }
   point {
-    x: 0.3
-    y: -0.225
+    x: -0.2975
+    y: -0.2500
   }
 }

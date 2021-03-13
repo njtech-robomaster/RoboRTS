@@ -12,7 +12,7 @@
 
 		<param name="laser_min_range" value="0.15" />
 		<param name="laser_max_range" value="8.0" />
-		<param name="min_particles" value="500" />
+		<param name="min_particles" value="200" />
 		<param name="laser_z_hit" value="0.5" />
 		<param name="laser_z_rand" value="0.5" />
 		<param name="laser_sigma_hit" value="0.2" />
