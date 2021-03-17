@@ -82,15 +82,15 @@ define rplidar ranger
 define rmcar position
 (
   size [0.595 0.500 0.482]
-  origin [0 0 0 0]
   gui_nose 1
   drive "omni"
   # frontcamera(pose [ 0 0 0 0 ])
   rplidar(pose [ 0 0 -0.229 180 ])
-  odom_error [0.03 0.03 0.00 0.05]
+  odom_error [ 1.0 -3.0 0 57.295779513 ] # MAGIC
   # [ xmin xmax ymin ymax zmin zmax amin amax ]
   velocity_bounds [-2 2 -2 2 -2 2 -90 90 ]
   acceleration_bounds [-2 2 -2 2 -2 2 -90 90]
+  localization "odom"
 )
 
 # set the resolution of the underlying raytrace model in meters
@@ -107,5 +107,10 @@ window
 )
 
 # throw in a robot
-rmcar(pose [ 3.47 -1.75 0 180 ] name "red1" color "red" )
+rmcar
+(
+  pose [ 3.47 -1.75 0 180 ]
+  name "red1"
+  color "red"
+)
 
