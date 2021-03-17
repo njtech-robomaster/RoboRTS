@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <launch>
-	<node pkg="roborts_base" type="roborts_base_node" name="roborts_base_node" output="screen" respawn="true" />
+	<node pkg="roborts_base" type="roborts_base_node" name="roborts_base_node" output="screen" respawn="true">
+		<param name="serial_port" value="/dev/serial_sdk" />
+	</node>
 
 	<node name="rplidar_node" pkg="rplidar_ros" type="rplidarNode" output="screen">
 		<param name="serial_port" value="/dev/rplidar" />

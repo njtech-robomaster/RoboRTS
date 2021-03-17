@@ -1,33 +1,32 @@
 project(roborts_base)
 cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake_module)
+add_definitions(-w)
 set(CMAKE_BUILD_TYPE Release)
 find_package(Threads REQUIRED)
-find_package(Glog REQUIRED)
+add_subdirectory(roborts_sdk)
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  tf
-  roborts_msgs
-  )
+        roscpp
+        tf
+        roborts_msgs
+)
 
-catkin_package()
+catkin_package(CATKIN_DEPENDS roscpp tf roborts_msgs)
 
 add_executable(roborts_base_node
-  roborts_base_node.cpp
-  chassis/chassis.cpp
-  gimbal/gimbal.cpp
-  referee_system/referee_system.cpp
-  roborts_sdk/dispatch/execution.cpp
-  roborts_sdk/dispatch/handle.cpp
-  roborts_sdk/protocol/protocol.cpp
-  roborts_sdk/hardware/serial_device.cpp
-  )
+        src/roborts_base_node.cpp
+        src/chassis.cpp
+        src/gimbal.cpp
+        src/referee_system.cpp
+        )
 target_link_libraries(roborts_base_node PUBLIC
-  Threads::Threads
-  ${GLOG_LIBRARY}
-  ${catkin_LIBRARIES})
+        Threads::Threads
+        ${catkin_LIBRARIES}
+        roborts_sdk)
 target_include_directories(roborts_base_node PUBLIC
-  ${catkin_INCLUDE_DIRS})
-add_dependencies(roborts_base_node roborts_msgs_generate_messages)
-
+        ${catkin_INCLUDE_DIRS}
+        include
+        roborts_sdk/include)
+add_dependencies(roborts_base_node
+        roborts_msgs_generate_messages
+        roborts_sdk)
