@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <launch>
 	<node pkg="roborts_base" type="roborts_base_node" name="roborts_base_node" output="screen" respawn="true">
+		<remap from="serial_port" to="~serial_port" />
+		<remap from="load_module" to="~load_module" />
 		<param name="serial_port" value="/dev/serial_sdk" />
 	</node>
 
