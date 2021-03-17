@@ -1,8 +1,11 @@
 <?xml version="1.0"?>
 <launch>
+	<arg name="map" default="icra2021" />
 	<arg name="initial_pose_x" default="3.47" />
 	<arg name="initial_pose_y" default="-1.75" />
 	<arg name="initial_pose_a" default="-3.141592654" />
+
+	<node name="map_server" pkg="map_server" type="map_server" args="$(find roborts_bringup)/maps/$(arg map).yaml" respawn="false" />
 	<node pkg="amcl" type="amcl" name="amcl">
 		<param name="use_map_topic" value="true" />
 		<param name="odom_model_type" value="omni-corrected" />
