@@ -26,7 +26,6 @@
 #include <ros/ros.h>
 #include "actionlib/server/simple_action_server.h"
 #include "roborts_msgs/GimbalAngle.h"
-#include "roborts_msgs/GimbalRate.h"
 #include "roborts_msgs/ArmorDetectionAction.h"
 
 #include "alg_factory/algorithm_factory.h"

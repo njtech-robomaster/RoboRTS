@@ -8,7 +8,6 @@ set(CMAKE_BUILD_TYPE Release)
 find_package(catkin REQUIRED COMPONENTS
   roborts_base
   roborts_common
-  roborts_localization
   roborts_costmap
   roborts_msgs
   roborts_planning

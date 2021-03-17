@@ -6,8 +6,18 @@ find_package(catkin REQUIRED COMPONENTS
         std_msgs
         nav_msgs
         geometry_msgs
+        actionlib
         message_generation
         )
+
+add_action_files(
+        DIRECTORY action
+        FILES
+        LocalPlanner.action
+        GlobalPlanner.action
+        ArmorDetection.action
+)
+
 
 #chassis message
 add_message_files(
