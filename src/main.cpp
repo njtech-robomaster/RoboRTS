@@ -109,8 +109,18 @@ int main() {
 	rm::ArmorParam armor_param;
 	rm::ArmorDetector armor_detector;
 	armor_detector.init(armor_param);
-	armor_detector.setEnemyColor(
-	    rm::BLUE); // TODO Retrive color from serial port
+
+	// Default enemy color
+	const std::string default_enemy_color = env("RM_ENEMY_COLOR", "blue");
+	if (default_enemy_color == "red") {
+		armor_detector.setEnemyColor(rm::RED);
+	} else if (default_enemy_color == "blue") {
+		armor_detector.setEnemyColor(rm::BLUE);
+	} else {
+		std::cerr << "Unrecognized enemy color\n";
+		std::abort();
+	}
+	// TODO Retrive color from serial port
 
 	// Initialize pose solver
 	PoseSolver pose_solver;
