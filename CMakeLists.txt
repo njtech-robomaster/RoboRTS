@@ -18,4 +18,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 file(GLOB_RECURSE cxx_src "src/*.h" "src/*.cpp")
 
 add_executable(armor_detect ${cxx_src})
-target_link_libraries(armor_detect ${OpenCV_LIBS})
+target_link_libraries(armor_detect
+	PUBLIC
+	${OpenCV_LIBS}
+	PRIVATE
+	"stdc++fs"
+)
