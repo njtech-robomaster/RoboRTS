@@ -1,9 +1,6 @@
-#include "pose_solver.h"
-#include "serial.h"
 #include "seu-detect/Armor/ArmorDetector.h"
 #include <chrono>
 #include <cmath>
-#include "filesystem_support.hpp"
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
@@ -59,43 +56,9 @@ std::string env(const std::string &var, const std::string &default_value) {
 	return val == nullptr ? default_value : val;
 }
 
-void put_int16_be(char *&ptr, const int16_t &val) {
-	ptr[0] = (char)((val >> 8) & 0xff);
-	ptr[1] = (char)((val >> 0) & 0xff);
-	ptr += 2;
-}
-void send_result(SerialPort &serial, const DetectResult &result) {
-	static char buf[18];
-	char *ptr = buf;
-	*(ptr++) = 0x22;
-	put_int16_be(ptr, result.center_x);
-	put_int16_be(ptr, result.center_y);
-	put_int16_be(ptr, result.t_x);
-	put_int16_be(ptr, result.t_y);
-	put_int16_be(ptr, result.t_z);
-	put_int16_be(ptr, result.r_x);
-	put_int16_be(ptr, result.r_y);
-	put_int16_be(ptr, result.r_z);
-	*(ptr++) = 0x33;
-
-#ifdef DEBUG
-	assert(ptr == buf + sizeof(buf));
-	for (size_t i = 0; i < sizeof(buf); i++) {
-		std::cerr << std::setfill('0') << std::setw(2) << std::hex
-		          << (0xff & (unsigned int)buf[i]);
-	}
-	std::cerr << std::endl;
-#endif
-
-	serial.send(buf, sizeof(buf));
-}
-
 int main() {
-	// Initialize serial port
-	SerialPort serial{env("RM_SERIAL", "/dev/null")};
-
 	// Open camera
-	cv::VideoCapture cap{std::stoi(env("RM_CAMERA", "0"))};
+	cv::VideoCapture cap{0};
 	if (!cap.isOpened()) {
 		std::cerr << "Couldn't open camera\n";
 		std::abort();
@@ -119,19 +82,6 @@ int main() {
 	} else {
 		std::cerr << "Unrecognized enemy color\n";
 		std::abort();
-	}
-	// TODO Retrive color from serial port
-
-	// Initialize pose solver
-	PoseSolver pose_solver;
-	std::string pose_param_file = env("RM_POSE_PARAM", "");
-	bool pose_solver_enabled = pose_param_file != "";
-	if (pose_solver_enabled) {
-		if (std::filesystem::is_directory(pose_param_file)) {
-			pose_param_file += "/" + std::to_string(frame_width) + "x" +
-			                   std::to_string(frame_height) + ".xml";
-		}
-		pose_solver.load_parameters(pose_param_file);
 	}
 
 	cv::Mat frame;
@@ -167,20 +117,9 @@ int main() {
 			result.center_y = (((double)center_y) / 4 / frame_height) *
 			                  std::numeric_limits<int16_t>::max();
 
-			PoseInfo pose;
-			if (pose_solver_enabled) {
-				pose = pose_solver.solve(vertex, armor_type);
-			}
-			result.t_x = std::round(pose.t_x);
-			result.t_y = std::round(pose.t_y);
-			result.t_z = std::round(pose.t_z);
+			// TODO: calcute pose
 
 #ifdef DEBUG
-			double distance =
-			    std::sqrt(pose.t_x * pose.t_x + pose.t_y * pose.t_y +
-			              pose.t_z * pose.t_z);
-			double pitch = std::atan2(pose.t_y, pose.t_z);
-			double yaw = std::atan2(pose.t_x, pose.t_z);
 			std::vector<cv::Point> quad_points;
 			for (auto &p : vertex) {
 				quad_points.push_back(p);
@@ -191,18 +130,11 @@ int main() {
 			          << "vertex0: (" << vertex[0].x << ", " << vertex[0].y << ")\n"
 			          << "vertex1: (" << vertex[1].x << ", " << vertex[1].y << ")\n"
 			          << "vertex2: (" << vertex[2].x << ", " << vertex[2].y << ")\n"
-			          << "vertex3: (" << vertex[3].x << ", " << vertex[3].y << ")\n"
-					  << "t_vec: [" << pose.t_x << ", "<< pose.t_y << ", "<< pose.t_z << "]\n"
-					  << "r_vec: [" << pose.r_x << ", "<< pose.r_y << ", "<< pose.r_z << "]\n"
-					  << "distance: " << distance << "\n"
-					  << "pitch: " << (pitch * 180) << "\n"
-					  << "yaw: "<< (yaw * 180) << "\n";
+			          << "vertex3: (" << vertex[3].x << ", " << vertex[3].y << ")\n";
 			// clang-format on
 
 #endif
 		}
-
-		send_result(serial, result);
 
 #ifdef DEBUG
 		auto t2 = std::chrono::high_resolution_clock::now();

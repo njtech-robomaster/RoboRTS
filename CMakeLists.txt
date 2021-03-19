@@ -21,6 +21,4 @@ add_executable(armor_detect ${cxx_src})
 target_link_libraries(armor_detect
 	PUBLIC
 	${OpenCV_LIBS}
-	PRIVATE
-	"stdc++fs"
 )
