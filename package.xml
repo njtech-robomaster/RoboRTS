@@ -1,0 +1,14 @@
+<package format="2">
+    <name>armor_detector</name>
+    <version>0.0.1</version>
+    <description>RealSense armor detector</description>
+    <maintainer email="me@yushi.moe">Haowei Wen</maintainer>
+    <license>ALL_RIGHTS_RESERVED</license>
+
+    <buildtool_depend>catkin</buildtool_depend>
+
+    <build_depend>roscpp</build_depend>
+    <build_export_depend>roscpp</build_export_depend>
+    <exec_depend>roscpp</exec_depend>
+
+</package>
