@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(armor_detect)
 
+find_package(realsense2 REQUIRED)
+
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -21,4 +23,5 @@ add_executable(armor_detect ${cxx_src})
 target_link_libraries(armor_detect
 	PUBLIC
 	${OpenCV_LIBS}
+	${realsense2_LIBRARY}
 )

@@ -1,23 +1,12 @@
+#include "cv-helpers.hpp"
 #include "seu-detect/Armor/ArmorDetector.h"
-#include <chrono>
-#include <cmath>
-#include <iostream>
+#include <librealsense2/rs.hpp>
+#include <librealsense2/rsutil.h>
 #include <opencv2/opencv.hpp>
 
-#define DEBUG
+const float shrink_factor = .3;
 
-class DetectResult {
-  public:
-	int16_t center_x = -1; // 目标在图像中的 x 坐标; -1 未检测到目标, [0,32767]
-	                       // 对应分数坐标 [0,1]
-	int16_t center_y = -1; // 目标在图像中的 y 坐标; 同上
-	int16_t t_x = -1;      // 目标 x 坐标 (mm), x 轴向右
-	int16_t t_y = -1;      // 目标 y 坐标 (mm), y 轴向下
-	int16_t t_z = -1;      // 目标 z 坐标 (mm), z 轴向前
-	int16_t r_x = -1;      // 目标旋转向量 x 分量, 暂时为 -1
-	int16_t r_y = -1;      // 目标旋转向量 y 分量, 暂时为 -1
-	int16_t r_z = -1;      // 目标旋转向量 z 分量, 暂时为 -1
-};
+#define DEBUG
 
 #ifdef DEBUG
 double to_ms(std::chrono::duration<double, std::milli> t) {
@@ -49,6 +38,14 @@ std::string to_armor_type(rm::ObjectType type) {
 		assert(false);
 	}
 }
+void draw_quad(cv::Mat display_mat, std::vector<cv::Point2f> verticies,
+               cv::Scalar color) {
+	std::vector<cv::Point> quad_points;
+	for (auto &p : verticies) {
+		quad_points.push_back(p);
+	}
+	cv::polylines(display_mat, quad_points, true, color);
+}
 #endif
 
 std::string env(const std::string &var, const std::string &default_value) {
@@ -56,35 +53,61 @@ std::string env(const std::string &var, const std::string &default_value) {
 	return val == nullptr ? default_value : val;
 }
 
-int main() {
-	// Open camera
-	cv::VideoCapture cap{0};
-	if (!cap.isOpened()) {
-		std::cerr << "Couldn't open camera\n";
-		std::abort();
+uint16_t mean_distance_within_quad(const cv::Mat &depth_mat,
+                                   const std::vector<cv::Point2f> verticies) {
+	std::vector<cv::Point> pts;
+	for (auto &point : verticies) {
+		pts.push_back({(int)std::round(point.x), (int)std::round(point.y)});
 	}
-	const int frame_width = std::stoi(env("RM_WIDTH", "640"));
-	const int frame_height = std::stoi(env("RM_HEIGHT", "480"));
-	cap.set(cv::CAP_PROP_FRAME_WIDTH, frame_width);
-	cap.set(cv::CAP_PROP_FRAME_HEIGHT, frame_height);
+
+	int min_x = std::max(std::min({pts[0].x, pts[1].x, pts[2].x, pts[3].x}), 0);
+	int max_x = std::min(std::max({pts[0].x, pts[1].x, pts[2].x, pts[3].x}),
+	                     depth_mat.cols - 1);
+	int min_y = std::max(std::min({pts[0].y, pts[1].y, pts[2].y, pts[3].y}), 0);
+	int max_y = std::min(std::max({pts[0].y, pts[1].y, pts[2].y, pts[3].y}),
+	                     depth_mat.rows - 1);
+
+	cv::Mat1b mask(depth_mat.rows, depth_mat.cols, uchar(0));
+	cv::fillConvexPoly(mask, pts, cv::Scalar(255));
+
+	uint64_t sum = 0;
+	uint32_t samples = 0;
+	for (int y = min_y; y <= max_y; y++) {
+		for (int x = min_x; x <= max_x; x++) {
+			if (mask.at<uchar>(y, x) == 0)
+				continue;
+			uint16_t distance = depth_mat.at<uint16_t>(y, x);
+			if (distance == 0)
+				continue;
+			samples++;
+			sum += distance;
+		}
+	}
+	return samples == 0 ? 0 : sum / samples;
+}
+
+int main() {
+	// Open pipeline
+	rs2::pipeline pipeline;
+	rs2::config rs_config;
+	rs_config.enable_stream(RS2_STREAM_COLOR, 1920, 1080, RS2_FORMAT_BGR8);
+	rs_config.enable_stream(RS2_STREAM_DEPTH, 1280, 720, RS2_FORMAT_Z16);
+
+	// Get color camera intrinsics
+	auto pipeline_profile = pipeline.start(rs_config);
+	auto color_stream = pipeline_profile.get_stream(RS2_STREAM_COLOR)
+	                        .as<rs2::video_stream_profile>();
+	auto color_intrinsics = color_stream.get_intrinsics();
+
+	// Setup depth-to-color align
+	rs2::align align_to_color{RS2_STREAM_COLOR};
 
 	// Initialize SEU armor detector
 	rm::ArmorParam armor_param;
 	rm::ArmorDetector armor_detector;
 	armor_detector.init(armor_param);
+	armor_detector.setEnemyColor(rm::BLUE);
 
-	// Default enemy color
-	const std::string default_enemy_color = env("RM_ENEMY_COLOR", "blue");
-	if (default_enemy_color == "red") {
-		armor_detector.setEnemyColor(rm::RED);
-	} else if (default_enemy_color == "blue") {
-		armor_detector.setEnemyColor(rm::BLUE);
-	} else {
-		std::cerr << "Unrecognized enemy color\n";
-		std::abort();
-	}
-
-	cv::Mat frame;
 	while (true) {
 
 #ifdef DEBUG
@@ -92,60 +115,74 @@ int main() {
 		auto t0 = std::chrono::high_resolution_clock::now();
 #endif
 
-		cap >> frame;
+		rs2::frameset frames = pipeline.wait_for_frames();
+		frames = align_to_color.process(frames);
+		rs2::video_frame color_frame = frames.get_color_frame();
+		rs2::depth_frame depth_frame = frames.get_depth_frame();
+		cv::Mat color_mat = frame_to_mat(color_frame);
+		cv::Mat depth_mat = frame_to_mat(depth_frame);
 
 #ifdef DEBUG
+		cv::Mat display_mat = color_mat.clone();
 		auto t1 = std::chrono::high_resolution_clock::now();
 #endif
 
-		DetectResult result;
-		armor_detector.loadImg(frame);
+		armor_detector.loadImg(color_mat);
 		rm::ArmorDetector::ArmorFlag detect_result = armor_detector.detect();
 		if (detect_result == rm::ArmorDetector::ARMOR_LOCAL ||
 		    detect_result == rm::ArmorDetector::ARMOR_LOCAL) {
-			std::vector<cv::Point2f> vertex = armor_detector.getArmorVertex();
+			std::vector<cv::Point2f> verticies =
+			    armor_detector.getArmorVertex();
 			rm::ObjectType armor_type = armor_detector.getArmorType();
 
-			int center_x = 0;
-			int center_y = 0;
-			for (auto &p : vertex) {
-				center_x += p.x;
-				center_y += p.y;
-			}
-			result.center_x = (((double)center_x) / 4 / frame_width) *
-			                  std::numeric_limits<int16_t>::max();
-			result.center_y = (((double)center_y) / 4 / frame_height) *
-			                  std::numeric_limits<int16_t>::max();
+			// calculate 2d center
+			cv::Point2f center_point =
+			    (verticies[0] + verticies[1] + verticies[2] + verticies[3]) / 4;
 
-			// TODO: calcute pose
+			// calculate shrinked quad
+			std::vector<cv::Point2f> shrinked_verticies;
+			for (auto &origin : verticies) {
+				cv::Point2f shrinked =
+				    (origin - center_point) * (1 - shrink_factor) +
+				    center_point;
+				shrinked_verticies.push_back(shrinked);
+			}
+
+			// calculate distance
+			float distance =
+			    mean_distance_within_quad(depth_mat, shrinked_verticies) *
+			    depth_frame.get_units();
+
+			// calculate 3d position
+			float pos_2d[] = {center_point.x, center_point.y};
+			float pos_3d[3];
+			rs2_deproject_pixel_to_point(pos_3d, &color_intrinsics, pos_2d,
+			                             distance);
+			cv::Point3f center_position{pos_3d[0], pos_3d[1], pos_3d[2]};
 
 #ifdef DEBUG
-			std::vector<cv::Point> quad_points;
-			for (auto &p : vertex) {
-				quad_points.push_back(p);
-			}
-			cv::polylines(frame, quad_points, true, cv::Scalar(255, 255, 0));
+			draw_quad(display_mat, verticies, {255, 255, 0});
+			draw_quad(display_mat, shrinked_verticies, {0, 255, 0});
 			// clang-format off
 			std::cerr << "armor_type: " << to_armor_type(armor_type) << "\n"
-			          << "vertex0: (" << vertex[0].x << ", " << vertex[0].y << ")\n"
-			          << "vertex1: (" << vertex[1].x << ", " << vertex[1].y << ")\n"
-			          << "vertex2: (" << vertex[2].x << ", " << vertex[2].y << ")\n"
-			          << "vertex3: (" << vertex[3].x << ", " << vertex[3].y << ")\n";
+			          << "vertex0: (" << verticies[0].x << ", " << verticies[0].y << ")\n"
+			          << "vertex1: (" << verticies[1].x << ", " << verticies[1].y << ")\n"
+			          << "vertex2: (" << verticies[2].x << ", " << verticies[2].y << ")\n"
+			          << "vertex3: (" << verticies[3].x << ", " << verticies[3].y << ")\n"
+					  << "distance: " << distance << "\n"
+					  << "position: (" <<  center_position.x <<", "<<  center_position.y <<", "<<  center_position.z <<")\n";
 			// clang-format on
-
 #endif
 		}
 
 #ifdef DEBUG
 		auto t2 = std::chrono::high_resolution_clock::now();
-#endif
 
-#ifdef DEBUG
 		std::cerr << "decode: " << to_ms(t1 - t0)
 		          << "ms, detect: " << to_ms(t2 - t1)
 		          << "ms, result: " << to_detect_result(detect_result)
 		          << std::endl;
-		cv::imshow("camera", frame);
+		cv::imshow("camera", display_mat);
 		cv::waitKey(1);
 #endif
 	}

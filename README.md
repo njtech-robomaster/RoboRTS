@@ -15,8 +15,3 @@ make
 
 ## 运行
 直接运行 `armor_detect` 即可。
-
-### 参数设置
-参数通过环境变量来设置：
-* `RM_WIDTH`、`RM_HEIGHT`：摄像头使用的分辨率，`RM_WIDTH` 默认为 `640`，`RM_HEIGHT` 默认为 `480`。
-* `RM_ENEMY_COLOR`：默认的敌方颜色，`blue` 或 `red`。默认值是 `blue`。
