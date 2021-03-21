@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <launch>
+	<param name="team_color" value="red" /> <!-- TODO: retrive from referee system -->
+
 	<node pkg="roborts_base" type="roborts_base_node" name="roborts_base_node" output="screen" respawn="true">
 		<remap from="serial_port" to="~serial_port" />
 		<remap from="load_module" to="~load_module" />
@@ -13,6 +15,10 @@
 		<remap from="scan" to="base_scan" />
 	</node>
 
+	<node name="armor_detector" pkg="armor_detector" type="armor_detector" output="screen" respawn="true">
+		<param name="camera_frame" value="camera_link_optical" />
+	</node>
+
 	<node pkg="tf2_ros" type="static_transform_publisher" name="laser_link_broadcaster"
 		args="0.18 0 0.262 3.141592654 0 0 base_link laser_link" />
 	<node pkg="tf2_ros" type="static_transform_publisher" name="yaw_base_link_broadcaster"
@@ -21,4 +27,8 @@
 		args="0 0 0.4085 0 0 0 yaw_link pitch_base_link" />
 	<node pkg="tf2_ros" type="static_transform_publisher" name="shoot_link_broadcaster"
 		args="0.19098 0 0 0 0 0 pitch_link shoot_link" />
+	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_optical_broadcaster"
+		args="0 0 0 -1.570796327 0 -1.570796327 camera_link camera_link_optical" />
+	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
+		args="0 0 0 0 0 0 base_link camera_link" />
 </launch>
