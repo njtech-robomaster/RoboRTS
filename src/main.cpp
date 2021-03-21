@@ -1,6 +1,7 @@
 #include "detector.hpp"
-#include "geometry_msgs/PointStamped.h"
-#include "ros/ros.h"
+#include <chrono>
+#include <geometry_msgs/PointStamped.h>
+#include <ros/ros.h>
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "armor_detector");
@@ -19,8 +20,10 @@ int main(int argc, char **argv) {
 	msg.header.frame_id =
 	    ros::param::param<std::string>("~camera_frame", "camera_link");
 
+	auto last_poll_time = std::chrono::high_resolution_clock::now();
 	ros::Rate loop_rate(60);
 	while (ros::ok()) {
+
 		if (detector.poll()) {
 			msg.header.stamp = ros::Time::now();
 			DetectResult result;
@@ -30,7 +33,21 @@ int main(int argc, char **argv) {
 				msg.point.z = result.position.z;
 				result_pub.publish(msg);
 			}
+			last_poll_time = std::chrono::high_resolution_clock::now();
 		}
+
+		int ms_elapsed =
+		    std::chrono::duration_cast<std::chrono::milliseconds>(
+		        std::chrono::high_resolution_clock::now() - last_poll_time)
+		        .count();
+		if (ms_elapsed > 1000) {
+			ROS_WARN("No frame data is received for %d ms", ms_elapsed);
+			if (ms_elapsed > 5000) {
+				ROS_ERROR("No data received in 5s, exiting...");
+				abort();
+			}
+		}
+
 		ros::spinOnce();
 		loop_rate.sleep();
 	}

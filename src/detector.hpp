@@ -1,6 +1,7 @@
 #pragma once
 
 #include "seu-detect/Armor/ArmorDetector.h"
+#include <atomic>
 #include <librealsense2/rs.hpp>
 #include <opencv2/opencv.hpp>
 
@@ -22,4 +23,6 @@ class RSArmorDetector {
 	rs2::align align_to_color;
 	rm::ArmorDetector seu_armor_detector;
 	rs2::frameset frames;
+	rs2::context ctx;
+	std::atomic_bool is_disconnected;
 };

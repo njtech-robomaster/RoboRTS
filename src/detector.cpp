@@ -8,7 +8,7 @@ const float shrink_factor = .3;
 
 RSArmorDetector::RSArmorDetector(cv::Size2i color_resolution,
                                  cv::Size2i depth_resolution)
-    : align_to_color{RS2_STREAM_COLOR} {
+    : align_to_color{RS2_STREAM_COLOR}, is_disconnected{false} {
 	rs2::config rs_config;
 	rs_config.enable_stream(RS2_STREAM_COLOR, color_resolution.width,
 	                        color_resolution.height, RS2_FORMAT_BGR8);
@@ -19,6 +19,14 @@ RSArmorDetector::RSArmorDetector(cv::Size2i color_resolution,
 	                        .as<rs2::video_stream_profile>();
 	color_intrinsics = color_stream.get_intrinsics();
 
+	auto device = pipeline_profile.get_device();
+	ctx.set_devices_changed_callback([=](rs2::event_information &info) {
+		if (info.was_removed(device)) {
+			is_disconnected = true;
+			ROS_ERROR("RealSense is disconnected.");
+		}
+	});
+
 	rm::ArmorParam armor_param;
 	seu_armor_detector.init(armor_param);
 }
@@ -27,6 +35,9 @@ bool RSArmorDetector::poll() {
 	if (pipeline.poll_for_frames(&frames)) {
 		frames = align_to_color.process(frames);
 		return true;
+	}
+	if (is_disconnected) {
+		throw rs2::error{"Device disconnected"};
 	}
 	return false;
 }
