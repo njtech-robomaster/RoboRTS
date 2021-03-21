@@ -72,7 +72,7 @@ void setup_target_color(rm::ArmorDetector &seu_armor_detector) {
 	} else if (val == "blue") {
 		seu_armor_detector.setEnemyColor(rm::RED);
 	} else {
-		ROS_WARN("Unrecognized ~team_color param value: %s", val.c_str());
+		ROS_WARN("Unrecognized team_color param value: %s", val.c_str());
 	}
 }
 
