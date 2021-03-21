@@ -99,9 +99,11 @@ class Gimbal: public Module {
   ros::ServiceServer ros_ctrl_fric_wheel_srv_;
   //! ros service server for gimbal shoot control
   ros::ServiceServer ros_ctrl_shoot_srv_;
-  //! ros gimbal tf
-  geometry_msgs::TransformStamped gimbal_tf_;
-  //! ros gimbal tf broadcaster
+  //! ros yaw tf
+  geometry_msgs::TransformStamped yaw_tf_;
+  //! ros pitch tf
+  geometry_msgs::TransformStamped pitch_tf_;
+  //! ros yaw/pitch tf broadcaster
   tf::TransformBroadcaster        tf_broadcaster_;
 
 };

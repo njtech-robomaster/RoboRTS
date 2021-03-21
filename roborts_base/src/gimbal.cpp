@@ -81,23 +81,24 @@ void Gimbal::ROS_Init(){
   ros_ctrl_fric_wheel_srv_ = ros_nh_.advertiseService("cmd_fric_wheel", &Gimbal::CtrlFricWheelService, this);
   ros_ctrl_shoot_srv_ = ros_nh_.advertiseService("cmd_shoot", &Gimbal::CtrlShootService, this);
   //ros_message_init
-  gimbal_tf_.header.frame_id = "base_link";
-  gimbal_tf_.child_frame_id = "gimbal";
+  yaw_tf_.header.frame_id = "yaw_base_link";
+  yaw_tf_.child_frame_id = "yaw_link";
+  pitch_tf_.header.frame_id = "pitch_base_link";
+  pitch_tf_.child_frame_id = "pitch_link";
 
 }
 
 void Gimbal::GimbalInfoCallback(const std::shared_ptr<roborts_sdk::cmd_gimbal_info> gimbal_info){
 
   ros::Time current_time = ros::Time::now();
-  geometry_msgs::Quaternion q = tf::createQuaternionMsgFromRollPitchYaw(0.0,
-                                                                        gimbal_info->pitch_ecd_angle / 1800.0 * M_PI,
-                                                                        gimbal_info->yaw_ecd_angle / 1800.0 * M_PI);
-  gimbal_tf_.header.stamp = current_time;
-  gimbal_tf_.transform.rotation = q;
-  gimbal_tf_.transform.translation.x = 0;
-  gimbal_tf_.transform.translation.y = 0;
-  gimbal_tf_.transform.translation.z = 0.15;
-  tf_broadcaster_.sendTransform(gimbal_tf_);
+
+  yaw_tf_.header.stamp = current_time;
+  yaw_tf_.transform.rotation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, gimbal_info->yaw_ecd_angle / 1800.0 * M_PI);
+  tf_broadcaster_.sendTransform(yaw_tf_);
+
+  pitch_tf_.header.stamp = current_time;
+  pitch_tf_.transform.rotation = tf::createQuaternionMsgFromRollPitchYaw(0, gimbal_info->pitch_ecd_angle / 1800.0 * M_PI, 0);
+  tf_broadcaster_.sendTransform(pitch_tf_);
 
 }
 
