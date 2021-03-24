@@ -1,4 +1,4 @@
-#include "trajectory.hpp"
+#include "trajectory_solver.hpp"
 #include <nav_msgs/Path.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
@@ -32,17 +32,12 @@ nav_msgs::Path simulate_trajectory(std::string tf, geometry_msgs::Point x0,
 	return path;
 }
 
-TrajectoryPublisher::TrajectoryPublisher() : tf_listener{tf_buffer} {
+TrajectorySolver::TrajectorySolver() : tf_listener{tf_buffer} {
 	ros::NodeHandle nh;
-	path_publisher = nh.advertise<nav_msgs::Path>("bullet_trajectory", 1);
-
-	base_frame = "base_link";
-	ros::param::get("base_frame", base_frame);
-	shoot_frame = "shoot_link";
-	ros::param::get("shoot_frame", shoot_frame);
+	trajectory_path_pub = nh.advertise<nav_msgs::Path>("bullet_trajectory", 1);
 }
 
-bool TrajectoryPublisher::publish() {
+bool TrajectorySolver::publish_simulation() {
 	geometry_msgs::TransformStamped transform;
 
 	try {
@@ -54,7 +49,7 @@ bool TrajectoryPublisher::publish() {
 	}
 
 	geometry_msgs::Vector3 v0;
-	v0.x = ros::param::param("bullet_velocity", 8.0);
+	v0.x = bullet_velocity;
 	v0.y = 0;
 	v0.z = 0;
 	tf2::doTransform(v0, v0, transform);
@@ -65,8 +60,8 @@ bool TrajectoryPublisher::publish() {
 	x0.z = 0;
 	tf2::doTransform(x0, x0, transform);
 
-	nav_msgs::Path path = simulate_trajectory(
-	    base_frame, x0, v0, ros::param::param("sim_time_step", .01));
-	path_publisher.publish(path);
+	nav_msgs::Path path =
+	    simulate_trajectory(base_frame, x0, v0, sim_time_step);
+	trajectory_path_pub.publish(path);
 	return true;
 }
