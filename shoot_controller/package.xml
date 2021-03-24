@@ -11,9 +11,11 @@
     <build_depend>nav_msgs</build_depend>
     <build_depend>tf2_ros</build_depend>
     <build_depend>tf2_geometry_msgs</build_depend>
+    <build_depend>roborts_msgs</build_depend>
     <exec_depend>roscpp</exec_depend>
     <exec_depend>nav_msgs</exec_depend>
     <exec_depend>tf2_ros</exec_depend>
     <exec_depend>tf2_geometry_msgs</exec_depend>
+    <exec_depend>roborts_msgs</exec_depend>
 
 </package>

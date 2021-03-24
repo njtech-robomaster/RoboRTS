@@ -24,8 +24,8 @@ int main(int argc, char **argv) {
 	ros::Rate loop_rate(60);
 	while (ros::ok()) {
 
+		msg.header.stamp = ros::Time::now();
 		if (detector.poll()) {
-			msg.header.stamp = ros::Time::now();
 			DetectResult result;
 			if (detector.detect(result)) {
 				msg.point.x = result.position.x;
