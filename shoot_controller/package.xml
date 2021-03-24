@@ -1,0 +1,19 @@
+<package format="2">
+    <name>shoot_controller</name>
+    <version>0.0.1</version>
+    <description>Ballistic simulation and automatic aiming</description>
+    <maintainer email="me@yushi.moe">Haowei Wen</maintainer>
+    <license>ALL_RIGHTS_RESERVED</license>
+
+    <buildtool_depend>catkin</buildtool_depend>
+
+    <build_depend>roscpp</build_depend>
+    <build_depend>nav_msgs</build_depend>
+    <build_depend>tf2_ros</build_depend>
+    <build_depend>tf2_geometry_msgs</build_depend>
+    <exec_depend>roscpp</exec_depend>
+    <exec_depend>nav_msgs</exec_depend>
+    <exec_depend>tf2_ros</exec_depend>
+    <exec_depend>tf2_geometry_msgs</exec_depend>
+
+</package>
