@@ -1,0 +1,15 @@
+<package format="2">
+    <name>robot_info_publisher</name>
+    <version>0.0.1</version>
+    <description>Publishes robot information</description>
+    <maintainer email="me@yushi.moe">Haowei Wen</maintainer>
+    <license>ALL_RIGHTS_RESERVED</license>
+
+    <buildtool_depend>catkin</buildtool_depend>
+
+    <build_depend>roscpp</build_depend>
+    <build_depend>roborts_msgs</build_depend>
+    <exec_depend>roscpp</exec_depend>
+    <exec_depend>roborts_msgs</exec_depend>
+
+</package>

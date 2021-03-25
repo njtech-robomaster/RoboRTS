@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <launch>
-	<param name="team_color" value="red" /> <!-- TODO: retrive from referee system -->
-
 	<node pkg="roborts_base" type="roborts_base_node" name="roborts_base_node" output="screen" respawn="true">
 		<remap from="serial_port" to="~serial_port" />
 		<remap from="load_module" to="~load_module" />
 		<param name="serial_port" value="/dev/serial_sdk" />
 		<param name="fric_speed" value="1350" />
 	</node>
+
+	<node pkg="robot_info_publisher" type="robot_info_publisher" name="robot_info_publisher" output="screen" />
 
 	<node name="rplidar_node" pkg="rplidar_ros" type="rplidarNode" output="screen" respawn="true">
 		<param name="serial_port" value="/dev/rplidar" />
