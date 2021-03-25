@@ -133,7 +133,8 @@ bool Gimbal::CtrlFricWheelService(roborts_msgs::FricWhl::Request &req,
 bool Gimbal::CtrlShootService(roborts_msgs::ShootCmd::Request &req,
                               roborts_msgs::ShootCmd::Response &res){
   roborts_sdk::cmd_shoot_info gimbal_shoot;
-  uint16_t default_freq = 1500;
+  int default_freq = 1500;
+  ros::param::getCached("~continuous_shoot_freq", default_freq);
   switch(static_cast<roborts_sdk::shoot_cmd_e>(req.mode)){
     case roborts_sdk::SHOOT_STOP:
       gimbal_shoot.shoot_cmd = roborts_sdk::SHOOT_STOP;
