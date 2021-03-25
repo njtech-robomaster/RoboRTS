@@ -17,6 +17,7 @@ int main(int argc, char **argv) {
 	auto armor_target_sub = nh.subscribe<geometry_msgs::PointStamped>(
 	    "armor_target", 1,
 	    [&](const geometry_msgs::PointStamped::ConstPtr &target) {
+			ros::param::getCached("bullet_velocity", trajectory_solver.bullet_velocity);
 		    trajectory_solver.aim_target(*target);
 	    });
 
@@ -27,7 +28,6 @@ int main(int argc, char **argv) {
 	    "robot_shoot", 1, [&](const roborts_msgs::RobotShoot::ConstPtr &msg) {
 		    double est_velocity = speed_monitor.update_velocity(msg->speed);
 		    if (use_measured_velocity) {
-			    trajectory_solver.bullet_velocity = est_velocity;
 			    ros::param::set("bullet_velocity", est_velocity);
 			    ROS_INFO("Latest bullet velocity: %lf, estimated bullet "
 			             "velocity: %lf",
