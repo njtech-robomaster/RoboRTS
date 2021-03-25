@@ -51,3 +51,16 @@ target_link_libraries(trajectory_visualization
 )
 add_dependencies(trajectory_visualization
   roborts_msgs_generate_messages)
+
+file(GLOB_RECURSE pitch_calibration_cxx_src
+	"src/pitch_calibration/*.h"
+	"src/pitch_calibration/*.hpp"
+	"src/pitch_calibration/*.cpp"
+)
+add_executable(pitch_calibration ${pitch_calibration_cxx_src})
+target_link_libraries(pitch_calibration
+	PUBLIC
+	${catkin_LIBRARIES}
+)
+add_dependencies(pitch_calibration
+  roborts_msgs_generate_messages)
