@@ -25,8 +25,11 @@ class TrajectoryVisualization {
 			return false;
 		}
 
+		double bullet_velocity = 8.0;
+		ros::param::getCached("bullet_velocity", bullet_velocity);
+
 		geometry_msgs::Vector3 v0;
-		v0.x = ros::param::param("bullet_velocity", 8.0);
+		v0.x = bullet_velocity;
 		v0.y = 0;
 		v0.z = 0;
 		tf2::doTransform(v0, v0, transform);

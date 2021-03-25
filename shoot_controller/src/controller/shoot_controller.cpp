@@ -21,11 +21,18 @@ int main(int argc, char **argv) {
 	    });
 
 	SpeedMonitor speed_monitor;
+	bool use_measured_velocity =
+	    ros::param::param("~use_measured_velocity", true);
 	auto shoot_sub = nh.subscribe<roborts_msgs::RobotShoot>(
 	    "robot_shoot", 1, [&](const roborts_msgs::RobotShoot::ConstPtr &msg) {
 		    double est_velocity = speed_monitor.update_velocity(msg->speed);
-		    trajectory_solver.bullet_velocity = est_velocity;
-		    ros::param::set("bullet_velocity", est_velocity);
+		    if (use_measured_velocity) {
+			    trajectory_solver.bullet_velocity = est_velocity;
+			    ros::param::set("bullet_velocity", est_velocity);
+			    ROS_INFO("Latest bullet velocity: %lf, estimated bullet "
+			             "velocity: %lf",
+			             msg->speed, est_velocity);
+		    }
 	    });
 
 	ros::spin();
