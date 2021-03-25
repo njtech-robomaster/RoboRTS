@@ -6,6 +6,7 @@
 		<remap from="serial_port" to="~serial_port" />
 		<remap from="load_module" to="~load_module" />
 		<param name="serial_port" value="/dev/serial_sdk" />
+		<param name="fric_speed" value="1300" />
 	</node>
 
 	<node name="rplidar_node" pkg="rplidar_ros" type="rplidarNode" output="screen" respawn="true">
@@ -19,7 +20,10 @@
 		<param name="camera_frame" value="camera_link_optical" />
 	</node>
 
-	<node name="shoot_controller" pkg="shoot_controller" type="shoot_controller" output="screen" />
+	<param name="bullet_velocity" value="15.32" />
+	<node name="shoot_controller" pkg="shoot_controller" type="shoot_controller" output="screen">
+		<param name="use_measured_velocity" value="false" />
+	</node>
 	<node name="trajectory_visualization" pkg="shoot_controller" type="trajectory_visualization" output="screen" />
 
 	<node pkg="tf2_ros" type="static_transform_publisher" name="laser_link_broadcaster"
