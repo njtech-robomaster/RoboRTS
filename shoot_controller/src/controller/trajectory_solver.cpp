@@ -2,9 +2,20 @@
 #include <roborts_msgs/GimbalAngle.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-TrajectorySolver::TrajectorySolver() : tf_listener{tf_buffer} {
+TrajectorySolver::TrajectorySolver(std::function<double()> bullet_velocity_fn_)
+    : tf_listener{tf_buffer}, bullet_velocity_fn{bullet_velocity_fn_} {
 	ros::NodeHandle nh;
 	gimbal_pub = nh.advertise<roborts_msgs::GimbalAngle>("cmd_gimbal_angle", 1);
+
+	ros::param::get("~yaw_base_frame", yaw_base_frame);
+	ros::param::get("~pitch_base_frame", pitch_base_frame);
+	ros::param::get("~shoot_frame", shoot_frame);
+
+	armor_target_sub = nh.subscribe<geometry_msgs::PointStamped>(
+	    "armor_target", 1,
+	    [&](const geometry_msgs::PointStamped::ConstPtr &target) {
+		    aim_target(*target);
+	    });
 }
 
 double calc_polynomial(const std::vector<double> &coeffs, double x) {
@@ -94,7 +105,7 @@ bool TrajectorySolver::aim_target(const geometry_msgs::PointStamped &target_) {
 	double pitch = -compute_pitch(
 	    std::sqrt(target_in_yaw_base.point.x * target_in_yaw_base.point.x +
 	              target_in_yaw_base.point.y * target_in_yaw_base.point.y),
-	    target_in_pitch_base.point.z, gun_barrel_length, bullet_velocity);
+	    target_in_pitch_base.point.z, gun_barrel_length, bullet_velocity_fn());
 	if (std::isnan(pitch)) {
 		return false;
 	}
