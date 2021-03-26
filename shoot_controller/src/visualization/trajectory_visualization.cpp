@@ -17,7 +17,7 @@ class TrajectoryVisualization {
 		ros::param::get("initial_bullet_velocity", bullet_velocity);
 		current_bullet_velocity_sub = nh.subscribe<std_msgs::Float64>(
 		    "current_bullet_velocity", 1,
-		    [&](const std_msgs::Float64::ConstPtr &msg) {
+		    [this](const std_msgs::Float64::ConstPtr &msg) {
 			    bullet_velocity = msg->data;
 		    });
 	}

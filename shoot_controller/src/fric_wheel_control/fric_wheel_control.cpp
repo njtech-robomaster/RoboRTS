@@ -12,7 +12,7 @@ class FricWheelControl {
 
 		game_status_sub = nh.subscribe<roborts_msgs::GameStatus>(
 		    "game_status", 1,
-		    [&](const roborts_msgs::GameStatus::ConstPtr &msg) {
+		    [this](const roborts_msgs::GameStatus::ConstPtr &msg) {
 			    bool fric_ready =
 			        msg->game_status == roborts_msgs::GameStatus::FIVE_SEC_CD ||
 			        msg->game_status == roborts_msgs::GameStatus::GAME;

@@ -11,6 +11,7 @@ class SpeedMonitor {
   private:
 	ros::Subscriber robot_shoot_sub;
 	ros::Publisher current_bullet_velocity_pub;
-	double current_bullet_velocity;
+	bool use_measured_velocity = true;
+	double current_bullet_velocity = 8.0;
 	double update_velocity(double latest_velocity);
 };

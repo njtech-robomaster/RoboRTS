@@ -3,7 +3,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 TrajectorySolver::TrajectorySolver(std::function<double()> bullet_velocity_fn_)
-    : tf_listener{tf_buffer}, bullet_velocity_fn{bullet_velocity_fn_} {
+    : bullet_velocity_fn{bullet_velocity_fn_}, tf_listener{tf_buffer} {
 	ros::NodeHandle nh;
 	gimbal_pub = nh.advertise<roborts_msgs::GimbalAngle>("cmd_gimbal_angle", 1);
 
@@ -13,7 +13,7 @@ TrajectorySolver::TrajectorySolver(std::function<double()> bullet_velocity_fn_)
 
 	armor_target_sub = nh.subscribe<geometry_msgs::PointStamped>(
 	    "armor_target", 1,
-	    [&](const geometry_msgs::PointStamped::ConstPtr &target) {
+	    [this](const geometry_msgs::PointStamped::ConstPtr &target) {
 		    aim_target(*target);
 	    });
 }
@@ -105,10 +105,12 @@ bool TrajectorySolver::aim_target(const geometry_msgs::PointStamped &target_) {
 	double distance =
 	    std::sqrt(target_in_yaw_base.point.x * target_in_yaw_base.point.x +
 	              target_in_yaw_base.point.y * target_in_yaw_base.point.y);
-	double height = target_in_pitch_base.point.z; // height is expected to be -0.26
+	double height =
+	    target_in_pitch_base.point.z; // height is expected to be -0.265
 	double pitch = -compute_pitch(distance, height, gun_barrel_length,
 	                              bullet_velocity_fn());
-	ROS_INFO("target distance: %lf, height: %lf, pitch: %lf", distance, height, pitch);
+	ROS_INFO("target distance: %lf, height: %lf, pitch: %lf", distance, height,
+	         pitch);
 	if (std::isnan(pitch)) {
 		return false;
 	}
