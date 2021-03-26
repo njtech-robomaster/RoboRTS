@@ -37,5 +37,5 @@
 	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_optical_broadcaster"
 		args="0 0 0 -1.570796327 0 -1.570796327 camera_link camera_link_optical" />
 	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
-		args="0.20575 0.0325 0.29 0 0.261799388 0 yaw_link camera_link" />
+		args="0.20575 0.0325 0.29 0 0.232346957 0 yaw_link camera_link" />
 </launch>
