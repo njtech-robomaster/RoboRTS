@@ -1,5 +1,6 @@
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
+#include <std_msgs/Float64.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_listener.h>
 
@@ -12,6 +13,13 @@ class TrajectoryVisualization {
 		ros::param::get("~base_frame", base_frame);
 		ros::param::get("~shoot_frame", shoot_frame);
 		ros::param::get("~sim_time_step", sim_time_step);
+
+		ros::param::get("initial_bullet_velocity", bullet_velocity);
+		current_bullet_velocity_sub = nh.subscribe<std_msgs::Float64>(
+		    "current_bullet_velocity", 1,
+		    [&](const std_msgs::Float64::ConstPtr &msg) {
+			    bullet_velocity = msg->data;
+		    });
 	}
 
 	bool publish_simulation() {
@@ -24,9 +32,6 @@ class TrajectoryVisualization {
 			ROS_WARN("Couldn't lookup transform: %s", e.what());
 			return false;
 		}
-
-		double bullet_velocity = 8.0;
-		ros::param::getCached("bullet_velocity", bullet_velocity);
 
 		geometry_msgs::Vector3 v0;
 		v0.x = bullet_velocity;
@@ -45,6 +50,8 @@ class TrajectoryVisualization {
 	}
 
   private:
+	double bullet_velocity = 8.0;
+	ros::Subscriber current_bullet_velocity_sub;
 	ros::Publisher trajectory_path_pub;
 	tf2_ros::Buffer tf_buffer;
 	tf2_ros::TransformListener tf_listener;
