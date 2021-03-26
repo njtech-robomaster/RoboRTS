@@ -22,7 +22,7 @@
 
 	<param name="initial_bullet_velocity" value="19.8" />
 	<node name="shoot_controller" pkg="shoot_controller" type="shoot_controller" output="screen">
-		<param name="pitch_compensation" value="0.02" />
+		<param name="pitch_compensation" value="0.03" />
 	</node>
 	<node name="trajectory_visualization" pkg="shoot_controller" type="trajectory_visualization" output="screen" />
 
@@ -37,5 +37,5 @@
 	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_optical_broadcaster"
 		args="0 0 0 -1.570796327 0 -1.570796327 camera_link camera_link_optical" />
 	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
-		args="0.20575 0.0325 0.29 0 0.232346957 0 yaw_link camera_link" />
+		args="0.20575 0.0325 0.29 0 0.267 -0.03 yaw_link camera_link" />
 </launch>

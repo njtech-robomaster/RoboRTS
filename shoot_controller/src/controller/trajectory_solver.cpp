@@ -102,10 +102,13 @@ bool TrajectorySolver::aim_target(const geometry_msgs::PointStamped &target_) {
 	              shoot_in_pitch_base.point.y * shoot_in_pitch_base.point.y +
 	              shoot_in_pitch_base.point.z * shoot_in_pitch_base.point.z);
 
-	double pitch = -compute_pitch(
+	double distance =
 	    std::sqrt(target_in_yaw_base.point.x * target_in_yaw_base.point.x +
-	              target_in_yaw_base.point.y * target_in_yaw_base.point.y),
-	    target_in_pitch_base.point.z, gun_barrel_length, bullet_velocity_fn());
+	              target_in_yaw_base.point.y * target_in_yaw_base.point.y);
+	double height = target_in_pitch_base.point.z; // height is expected to be -0.26
+	double pitch = -compute_pitch(distance, height, gun_barrel_length,
+	                              bullet_velocity_fn());
+	ROS_INFO("target distance: %lf, height: %lf, pitch: %lf", distance, height, pitch);
 	if (std::isnan(pitch)) {
 		return false;
 	}
