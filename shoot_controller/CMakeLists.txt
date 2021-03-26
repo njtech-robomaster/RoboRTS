@@ -64,3 +64,16 @@ target_link_libraries(pitch_calibration
 )
 add_dependencies(pitch_calibration
   roborts_msgs_generate_messages)
+
+file(GLOB_RECURSE fric_wheel_control_cxx_src
+	"src/fric_wheel_control/*.h"
+	"src/fric_wheel_control/*.hpp"
+	"src/fric_wheel_control/*.cpp"
+)
+add_executable(fric_wheel_control ${fric_wheel_control_cxx_src})
+target_link_libraries(fric_wheel_control
+	PUBLIC
+	${catkin_LIBRARIES}
+)
+add_dependencies(fric_wheel_control
+  roborts_msgs_generate_messages)

@@ -25,6 +25,7 @@
 		<param name="pitch_compensation" value="0.03" />
 	</node>
 	<node name="trajectory_visualization" pkg="shoot_controller" type="trajectory_visualization" output="screen" />
+	<node name="fric_wheel_control" pkg="shoot_controller" type="fric_wheel_control" output="screen" />
 
 	<node pkg="tf2_ros" type="static_transform_publisher" name="laser_link_broadcaster"
 		args="0.18 0 0.262 3.141592654 0 0 base_link laser_link" />
