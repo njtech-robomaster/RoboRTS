@@ -3,7 +3,8 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 TrajectorySolver::TrajectorySolver(std::function<double()> bullet_velocity_fn_)
-    : bullet_velocity_fn{bullet_velocity_fn_}, tf_listener{tf_buffer} {
+    : has_last_target{false}, bullet_velocity_fn{bullet_velocity_fn_},
+      tf_buffer{ros::Duration{60}}, tf_listener{tf_buffer} {
 	ros::NodeHandle nh;
 	gimbal_pub = nh.advertise<roborts_msgs::GimbalAngle>("cmd_gimbal_angle", 1);
 
@@ -14,8 +15,15 @@ TrajectorySolver::TrajectorySolver(std::function<double()> bullet_velocity_fn_)
 	armor_target_sub = nh.subscribe<geometry_msgs::PointStamped>(
 	    "armor_target", 1,
 	    [this](const geometry_msgs::PointStamped::ConstPtr &target) {
-		    aim_target(*target);
+		    if (aim_target(*target)) {
+			    has_last_target = true;
+			    last_target = *target;
+		    }
 	    });
+
+	control_loop_timer =
+	    nh.createTimer(ros::Duration{0.01},
+	                   [this](const ros::TimerEvent &) { control_loop(); });
 }
 
 double calc_polynomial(const std::vector<double> &coeffs, double x) {
@@ -107,18 +115,20 @@ bool filter_result(const geometry_msgs::Point &pos) {
 }
 
 bool TrajectorySolver::aim_target(const geometry_msgs::PointStamped &target_) {
+	std::string fixed_frame = "odom";
+	ros::param::getCached("~fixed_frame", fixed_frame);
+
 	geometry_msgs::PointStamped target_in_pitch_base;
 	geometry_msgs::PointStamped target_in_yaw_base;
 	geometry_msgs::PointStamped shoot_in_pitch_base;
 	shoot_in_pitch_base.header.frame_id = shoot_frame;
 	shoot_in_pitch_base.header.stamp = target_.header.stamp;
 	try {
-		tf_buffer.transform(target_, target_in_pitch_base, pitch_base_frame,
-		                    ros::Duration{0.010});
+		tf_buffer.transform(target_, target_in_pitch_base, pitch_base_frame);
 		tf_buffer.transform(target_, target_in_yaw_base, yaw_base_frame,
-		                    ros::Duration{0.010});
+		                    ros::Time{0}, fixed_frame);
 		tf_buffer.transform(shoot_in_pitch_base, shoot_in_pitch_base,
-		                    pitch_base_frame, ros::Duration{0.010});
+		                    pitch_base_frame, ros::Time{0}, fixed_frame);
 	} catch (const std::exception &e) {
 		ROS_WARN("Couldn't lookup transform: %s", e.what());
 		return false;
@@ -141,8 +151,6 @@ bool TrajectorySolver::aim_target(const geometry_msgs::PointStamped &target_) {
 	double height = target_in_pitch_base.point.z;
 	double pitch = -compute_pitch(distance, height, gun_barrel_length,
 	                              bullet_velocity_fn());
-	ROS_INFO("target distance: %lf, height: %lf, pitch: %lf", distance, height,
-	         pitch);
 
 	roborts_msgs::GimbalAngle gimbal_ctrl;
 	gimbal_ctrl.yaw_mode = false;
@@ -162,4 +170,10 @@ bool TrajectorySolver::aim_target(const geometry_msgs::PointStamped &target_) {
 	gimbal_pub.publish(gimbal_ctrl);
 
 	return true;
+}
+
+void TrajectorySolver::control_loop() {
+	if (has_last_target) {
+		aim_target(last_target);
+	}
 }
