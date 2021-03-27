@@ -13,6 +13,7 @@ class ShootController {
 	bool aim_target(const geometry_msgs::PointStamped &target);
 	void control_loop();
 
+	std::string fixed_frame = "odom";
 	std::string yaw_base_frame = "yaw_base_link";
 	std::string pitch_base_frame = "pitch_base_link";
 	std::string shoot_frame = "shoot_link";

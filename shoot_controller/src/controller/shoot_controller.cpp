@@ -12,6 +12,7 @@ ShootController::ShootController()
 	ros::param::get("~yaw_base_frame", yaw_base_frame);
 	ros::param::get("~pitch_base_frame", pitch_base_frame);
 	ros::param::get("~shoot_frame", shoot_frame);
+	ros::param::get("~fixed_frame", fixed_frame);
 
 	armor_target_sub = nh.subscribe<geometry_msgs::PointStamped>(
 	    "armor_target", 1,
@@ -54,9 +55,6 @@ bool filter_result(const geometry_msgs::Point &pos) {
 }
 
 bool ShootController::aim_target(const geometry_msgs::PointStamped &target_) {
-	std::string fixed_frame = "odom";
-	ros::param::getCached("~fixed_frame", fixed_frame);
-
 	geometry_msgs::PointStamped target_in_pitch_base;
 	geometry_msgs::PointStamped target_in_yaw_base;
 	geometry_msgs::PointStamped shoot_in_pitch_base;
