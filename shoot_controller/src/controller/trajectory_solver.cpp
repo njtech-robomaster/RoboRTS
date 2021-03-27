@@ -141,6 +141,14 @@ bool TrajectorySolver::aim_target(const geometry_msgs::PointStamped &target_) {
 		return false;
 	}
 
+	bool debug_print_target = false;
+	ros::param::getCached("~debug_print_target", debug_print_target);
+	if (debug_print_target) {
+		ROS_INFO("Target: %f, %f, %f",
+		         target_in_yaw_base.point.x, target_in_yaw_base.point.y,
+		         target_in_yaw_base.point.z);
+	}
+
 	double gun_barrel_length =
 	    std::sqrt(shoot_in_pitch_base.point.x * shoot_in_pitch_base.point.x +
 	              shoot_in_pitch_base.point.y * shoot_in_pitch_base.point.y +

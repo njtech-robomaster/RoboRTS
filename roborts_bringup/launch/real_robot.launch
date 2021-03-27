@@ -1,10 +1,13 @@
 <?xml version="1.0"?>
 <launch>
+	<arg name="debug" default="false" />
+	<arg name="robot_id" default="1" />
+
 	<node pkg="roborts_base" type="roborts_base_node" name="roborts_base_node" output="screen" respawn="true">
 		<remap from="serial_port" to="~serial_port" />
 		<remap from="load_module" to="~load_module" />
 		<param name="serial_port" value="/dev/serial_sdk" />
-		<param name="fric_speed" value="1350" />
+		<param name="fric_speed" value="1270" />
 	</node>
 
 	<node pkg="robot_info_publisher" type="robot_info_publisher" name="robot_info_publisher" output="screen" />
@@ -20,9 +23,13 @@
 		<param name="camera_frame" value="camera_link_optical" />
 	</node>
 
-	<param name="initial_bullet_velocity" value="19.8" />
+	<param name="initial_bullet_velocity" value="18.6" if="$(eval robot_id == 1)" />
+	<param name="initial_bullet_velocity" value="18.6" if="$(eval robot_id == 2)" />
+
 	<node name="shoot_controller" pkg="shoot_controller" type="shoot_controller" output="screen">
-		<param name="pitch_compensation" value="0.03" />
+		<param name="pitch_compensation" value="0.03" if="$(eval robot_id == 1)" />
+		<param name="pitch_compensation" value="0" if="$(eval robot_id == 2)" />
+		<param name="debug_print_target" value="$(arg debug)" />
 	</node>
 	<node name="trajectory_visualization" pkg="shoot_controller" type="trajectory_visualization" output="screen" />
 	<node name="fric_wheel_control" pkg="shoot_controller" type="fric_wheel_control" output="screen" />
@@ -37,6 +44,10 @@
 		args="0.19098 0 0 0 0 0 pitch_link shoot_link" />
 	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_optical_broadcaster"
 		args="0 0 0 -1.570796327 0 -1.570796327 camera_link camera_link_optical" />
+	<!-- AI Robot 1 -->
 	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
-		args="0.20575 0.0325 0.29 0 0.267 -0.03 yaw_link camera_link" />
+		args="0.20575 0.0325 0.29 0 0.267 -0.03 yaw_link camera_link" if="$(eval robot_id == 1)" />
+	<!-- AI Robot 2 -->
+	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
+		args="0.20575 0.0325 0.29 0 0.227 -0.03 yaw_link camera_link" if="$(eval robot_id == 2)" />
 </launch>

@@ -8,7 +8,7 @@ int main(int argc, char **argv) {
 
 	SpeedMonitor speed_monitor;
 	TrajectorySolver trajectory_solver{
-	    std::bind(&SpeedMonitor::get_current_bullet_velocity, speed_monitor)};
+	    [&]() { return speed_monitor.get_current_bullet_velocity(); }};
 
 	ros::spin();
 }
