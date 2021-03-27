@@ -80,6 +80,32 @@ double compute_pitch(double distance, double height, double gun_barrel_length,
 	return 2 * std::atan(k);
 }
 
+bool filter_result(const geometry_msgs::Point &pos) {
+	double height_min = 0.0;
+	ros::param::getCached("~target_height_min", height_min);
+	if (pos.z < height_min)
+		return false;
+
+	double height_max = 0.5;
+	ros::param::getCached("~target_height_max", height_max);
+	if (pos.z > height_max)
+		return false;
+
+	double ground_distance = std::sqrt(pos.x * pos.x + pos.y * pos.y);
+
+	double distance_min = 0.0;
+	ros::param::getCached("~target_ground_distance_min", distance_min);
+	if (ground_distance < distance_min)
+		return false;
+
+	double distance_max = 10.0;
+	ros::param::getCached("~target_ground_distance_max", distance_max);
+	if (ground_distance > distance_max)
+		return false;
+
+	return true;
+}
+
 bool TrajectorySolver::aim_target(const geometry_msgs::PointStamped &target_) {
 	geometry_msgs::PointStamped target_in_pitch_base;
 	geometry_msgs::PointStamped target_in_yaw_base;
@@ -97,32 +123,42 @@ bool TrajectorySolver::aim_target(const geometry_msgs::PointStamped &target_) {
 		ROS_WARN("Couldn't lookup transform: %s", e.what());
 		return false;
 	}
+
+	if (!filter_result(target_in_yaw_base.point)) {
+		ROS_INFO("Invalid detection result: %f, %f, %f",
+		         target_in_yaw_base.point.x, target_in_yaw_base.point.y,
+		         target_in_yaw_base.point.z);
+		return false;
+	}
+
 	double gun_barrel_length =
 	    std::sqrt(shoot_in_pitch_base.point.x * shoot_in_pitch_base.point.x +
 	              shoot_in_pitch_base.point.y * shoot_in_pitch_base.point.y +
 	              shoot_in_pitch_base.point.z * shoot_in_pitch_base.point.z);
-
 	double distance =
 	    std::sqrt(target_in_yaw_base.point.x * target_in_yaw_base.point.x +
 	              target_in_yaw_base.point.y * target_in_yaw_base.point.y);
-	double height =
-	    target_in_pitch_base.point.z; // height is expected to be -0.265
+	double height = target_in_pitch_base.point.z;
 	double pitch = -compute_pitch(distance, height, gun_barrel_length,
 	                              bullet_velocity_fn());
 	ROS_INFO("target distance: %lf, height: %lf, pitch: %lf", distance, height,
 	         pitch);
-	if (std::isnan(pitch)) {
-		return false;
-	}
-	double pitch_compensation = 0;
-	ros::param::getCached("~pitch_compensation", pitch_compensation);
 
 	roborts_msgs::GimbalAngle gimbal_ctrl;
 	gimbal_ctrl.yaw_mode = false;
-	gimbal_ctrl.pitch_mode = false;
 	gimbal_ctrl.yaw_angle =
 	    std::atan2(target_in_yaw_base.point.y, target_in_yaw_base.point.x);
-	gimbal_ctrl.pitch_angle = pitch - pitch_compensation;
+
+	if (std::isnan(pitch)) {
+		gimbal_ctrl.pitch_mode = true;
+		gimbal_ctrl.pitch_angle = 0;
+	} else {
+		double pitch_compensation = 0;
+		ros::param::getCached("~pitch_compensation", pitch_compensation);
+		gimbal_ctrl.pitch_mode = false;
+		gimbal_ctrl.pitch_angle = pitch - pitch_compensation;
+	}
+
 	gimbal_pub.publish(gimbal_ctrl);
 
 	return true;
