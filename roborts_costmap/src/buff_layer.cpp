@@ -59,7 +59,7 @@ void BuffLayer::OnInitialize() {
   buff_zone.max_y_ = -0.310;
   buff_zone.min_x_ = 3.270;
   buff_zone.min_y_ = -0.790;
-  map_buff_zones_.insert(std::map<int, BuffZone>::value_type(4, buff_zone));
+  map_buff_zones_.insert(std::map<int, BuffZone>::value_type(6, buff_zone));
 
   buff_zone.max_x_ = 2.410;
   buff_zone.max_y_ = 0.830;
@@ -71,7 +71,7 @@ void BuffLayer::OnInitialize() {
   buff_zone.max_y_ = -1.555;
   buff_zone.min_x_ = -0.270;
   buff_zone.min_y_ = -2.035;
-  map_buff_zones_.insert(std::map<int, BuffZone>::value_type(6, buff_zone));
+  map_buff_zones_.insert(std::map<int, BuffZone>::value_type(4, buff_zone));
 
   buff_zone_sub_ = nh.subscribe("/game_zone_array_status", 1,
                                 &BuffLayer::UpdateGameZoneArray, this);
