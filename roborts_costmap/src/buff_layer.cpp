@@ -16,7 +16,6 @@ void BuffLayer::OnInitialize() {
   first_map_only_ = para_buff_layer.first_map_only();
   subscribe_to_updates_ = para_buff_layer.subscribe_to_updates();
   use_maximum_ = para_buff_layer.use_maximum();
-  robot_color_ = para_buff_layer.robot_color();
   buff_zone_smaller_ = para_buff_layer.buff_zone_smaller();
 
   map_received_ = false;
@@ -243,34 +242,35 @@ void BuffLayer::UpdateGameZoneArray(
   vec_buff_debuff_status.emplace_back(
       new_game_zone_array.zone[5].type);
 
+  std::string team_color;
+  if (!ros::param::getCached("team_color", team_color)) {
+    ROS_WARN("team_color is not set");
+  }
+
   if (vec_last_buff_debuff_status_ != vec_buff_debuff_status ||
       vec_last_buff_active_ != vec_buff_active) {
-    for (int i = 1; i < vec_buff_debuff_status.size(); ++i) {
-      auto status = static_cast<int>(vec_buff_debuff_status.at(i));
-      if (status == 1 || status == 2) {
-        if (robot_color_ == "red") {
-          fill_buff_zone(map_buff_zones_.at(i), FREE_SPACE);
-        }
-        if (robot_color_ == "blue") {
-          if (vec_buff_active.at(i)) {
-            fill_buff_zone(map_buff_zones_.at(i), BUFF_OBSTACLE);
-          } else {
-            fill_buff_zone(map_buff_zones_.at(i), FREE_SPACE);
+    for (int i = 1; i <= 6; i++) {
+      uint8_t status = vec_buff_debuff_status.at(i - 1);
+      bool active = vec_buff_active.at(i - 1);
+      BuffZone buff_zone = map_buff_zones_.at(i);
+      if (active) {
+        if (status == roborts_msgs::GameZone::RED_HP_RECOVERY || status == roborts_msgs::GameZone::RED_BULLET_SUPPLY) {
+          if (team_color == "red") {
+            fill_buff_zone(buff_zone, FREE_SPACE);
+          } else if (team_color == "blue") {
+            fill_buff_zone(buff_zone, BUFF_OBSTACLE);
           }
-        }
-      } else if (status == 3 || status == 4) {
-        if (robot_color_ == "red") {
-          if (vec_buff_active.at(i)) {
-            fill_buff_zone(map_buff_zones_.at(i), BUFF_OBSTACLE);
-          } else {
-            fill_buff_zone(map_buff_zones_.at(i), FREE_SPACE);
+        } else if (status == roborts_msgs::GameZone::BLUE_HP_RECOVERY || status == roborts_msgs::GameZone::BLUE_BULLET_SUPPLY) {
+          if (team_color == "red") {
+            fill_buff_zone(buff_zone, BUFF_OBSTACLE);
+          } else if (team_color == "blue") {
+            fill_buff_zone(buff_zone, FREE_SPACE);
           }
+        } else if (status == roborts_msgs::GameZone::DISABLE_SHOOTING || status == roborts_msgs::GameZone::DISABLE_MOVEMENT) {
+          fill_buff_zone(buff_zone, BUFF_OBSTACLE);
         }
-        if (robot_color_ == "blue") {
-          fill_buff_zone(map_buff_zones_.at(i), FREE_SPACE);
-        }
-      } else if (status == 5 || status == 6) {
-        fill_buff_zone(map_buff_zones_.at(i), BUFF_OBSTACLE);
+      } else {
+        fill_buff_zone(buff_zone, FREE_SPACE);
       }
     }
     std::cout << "Update buff zone status successfully!" << std::endl;
