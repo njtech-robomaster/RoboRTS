@@ -13,6 +13,8 @@ class ShootController {
 	bool aim_and_shoot(const geometry_msgs::PointStamped &target);
 	bool track(const geometry_msgs::PointStamped &target);
 	bool shoot();
+	void track_moving_reference(bool control_gimbal);
+	void switch_moving_reference(bool control_gimbal);
 	void control_loop();
 
 	std::string fixed_frame = "odom";
@@ -27,6 +29,9 @@ class ShootController {
 	int heat;
 	int heat_cooling_rate;
 	int heat_cooling_limit;
+
+	bool has_moving_reference;
+	geometry_msgs::PointStamped moving_reference;
 
 	SpeedMonitor speed_monitor;
 	ros::Publisher gimbal_pub;
