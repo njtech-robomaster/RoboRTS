@@ -220,15 +220,15 @@ void BuffLayer::UpdateGameZoneArray(
 
   // std::cout << "Robot color: " << robot_color_ << std::endl;
 
-  std::vector<bool> vec_buff_active{false};
-  vec_buff_active.emplace_back(!new_game_zone_array.zone[0].active);
-  vec_buff_active.emplace_back(!new_game_zone_array.zone[1].active);
-  vec_buff_active.emplace_back(!new_game_zone_array.zone[2].active);
-  vec_buff_active.emplace_back(!new_game_zone_array.zone[3].active);
-  vec_buff_active.emplace_back(!new_game_zone_array.zone[4].active);
-  vec_buff_active.emplace_back(!new_game_zone_array.zone[5].active);
+  std::vector<bool> vec_buff_active;
+  vec_buff_active.emplace_back(new_game_zone_array.zone[0].active);
+  vec_buff_active.emplace_back(new_game_zone_array.zone[1].active);
+  vec_buff_active.emplace_back(new_game_zone_array.zone[2].active);
+  vec_buff_active.emplace_back(new_game_zone_array.zone[3].active);
+  vec_buff_active.emplace_back(new_game_zone_array.zone[4].active);
+  vec_buff_active.emplace_back(new_game_zone_array.zone[5].active);
 
-  std::vector<uint8_t> vec_buff_debuff_status{0};
+  std::vector<uint8_t> vec_buff_debuff_status;
   vec_buff_debuff_status.emplace_back(
       new_game_zone_array.zone[0].type);
   vec_buff_debuff_status.emplace_back(
