@@ -61,11 +61,13 @@ bool ShootController::aim_target(const geometry_msgs::PointStamped &target_) {
 	shoot_in_pitch_base.header.frame_id = shoot_frame;
 	shoot_in_pitch_base.header.stamp = target_.header.stamp;
 	try {
-		tf_buffer.transform(target_, target_in_pitch_base, pitch_base_frame);
+		tf_buffer.transform(target_, target_in_pitch_base, pitch_base_frame,
+		                    ros::Time{0}, fixed_frame, ros::Duration{0.1});
 		tf_buffer.transform(target_, target_in_yaw_base, yaw_base_frame,
-		                    ros::Time{0}, fixed_frame);
+		                    ros::Time{0}, fixed_frame, ros::Duration{0.1});
 		tf_buffer.transform(shoot_in_pitch_base, shoot_in_pitch_base,
-		                    pitch_base_frame, ros::Time{0}, fixed_frame);
+		                    pitch_base_frame, ros::Time{0}, pitch_base_frame,
+		                    ros::Duration{0.1});
 	} catch (const std::exception &e) {
 		ROS_WARN("Couldn't lookup transform: %s", e.what());
 		return false;
