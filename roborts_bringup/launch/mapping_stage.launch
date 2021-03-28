@@ -6,5 +6,5 @@
 	<include file="$(find roborts_bringup)/launch/laser_filter.launch" />
 	<include file="$(find roborts_bringup)/launch/slam.launch" />
 
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find roborts_bringup)/rviz/mapping.rviz" />
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find roborts_bringup)/rviz/mapping.rviz" output="screen"/>
 </launch>
