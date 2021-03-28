@@ -1,9 +1,17 @@
 <?xml version="1.0"?>
 <launch>
+	<arg name="boot_area" default="c3" />
+
+	<arg name="initial_pose_x" default="-3.47"        if="$(eval boot_area == 'c1' or boot_area == 'c2')" />
+	<arg name="initial_pose_x" default="3.47"         if="$(eval boot_area == 'c3' or boot_area == 'c4')" />
+	<arg name="initial_pose_y" default="1.75"         if="$(eval boot_area == 'c1' or boot_area == 'c4')" />
+	<arg name="initial_pose_y" default="-1.75"        if="$(eval boot_area == 'c2' or boot_area == 'c3')" />
+	<arg name="initial_pose_a" default="0"            if="$(eval boot_area == 'c1')" />
+	<arg name="initial_pose_a" default="-1.570796327"  if="$(eval boot_area == 'c2')" />
+	<arg name="initial_pose_a" default="-3.141592654"  if="$(eval boot_area == 'c3')" />
+	<arg name="initial_pose_a" default="1.570796327" if="$(eval boot_area == 'c4')" />
+
 	<arg name="map" default="icra2021" />
-	<arg name="initial_pose_x" default="3.47" />
-	<arg name="initial_pose_y" default="-1.75" />
-	<arg name="initial_pose_a" default="-3.141592654" />
 
 	<node name="map_server" pkg="map_server" type="map_server" args="$(find roborts_bringup)/maps/$(arg map).yaml" output="screen" />
 	<node pkg="amcl" type="amcl" name="amcl" output="screen">
