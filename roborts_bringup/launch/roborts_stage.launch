@@ -7,5 +7,5 @@
 	<include file="$(find roborts_bringup)/launch/localization.launch" />
 	<include file="$(find roborts_bringup)/launch/planning.launch" />
 
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find roborts_bringup)/rviz/roborts.rviz" />
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find roborts_bringup)/rviz/roborts.rviz" output="screen" />
 </launch>

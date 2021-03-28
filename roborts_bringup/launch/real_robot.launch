@@ -35,19 +35,19 @@
 	<node name="fric_wheel_control" pkg="shoot_controller" type="fric_wheel_control" output="screen" />
 
 	<node pkg="tf2_ros" type="static_transform_publisher" name="laser_link_broadcaster"
-		args="0.18 0 0.262 3.141592654 0 0 base_link laser_link" />
+		args="0.18 0 0.262 3.141592654 0 0 base_link laser_link" output="screen" />
 	<node pkg="tf2_ros" type="static_transform_publisher" name="yaw_base_link_broadcaster"
-		args="0.01625 0 0 0 0 0 base_link yaw_base_link" />
+		args="0.01625 0 0 0 0 0 base_link yaw_base_link" output="screen" />
 	<node pkg="tf2_ros" type="static_transform_publisher" name="pitch_base_link_broadcaster"
-		args="0 0 0.4085 0 0 0 yaw_link pitch_base_link" />
+		args="0 0 0.4085 0 0 0 yaw_link pitch_base_link" output="screen" />
 	<node pkg="tf2_ros" type="static_transform_publisher" name="shoot_link_broadcaster"
-		args="0.19098 0 0 0 0 0 pitch_link shoot_link" />
+		args="0.19098 0 0 0 0 0 pitch_link shoot_link" output="screen" />
 	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_optical_broadcaster"
-		args="0 0 0 -1.570796327 0 -1.570796327 camera_link camera_link_optical" />
+		args="0 0 0 -1.570796327 0 -1.570796327 camera_link camera_link_optical" output="screen" />
 	<!-- AI Robot 1 -->
 	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
-		args="0.20575 0.0325 0.29 0 0.267 -0.03 yaw_link camera_link" if="$(eval robot_id == 1)" />
+		args="0.20575 0.0325 0.29 0 0.267 -0.03 yaw_link camera_link" if="$(eval robot_id == 1)" output="screen" />
 	<!-- AI Robot 2 -->
 	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
-		args="0.20575 0.0325 0.29 0 0.227 -0.03 yaw_link camera_link" if="$(eval robot_id == 2)" />
+		args="0.20575 0.0325 0.29 0 0.227 -0.03 yaw_link camera_link" if="$(eval robot_id == 2)" output="screen" />
 </launch>
