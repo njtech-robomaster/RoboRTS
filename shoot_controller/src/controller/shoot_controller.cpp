@@ -22,18 +22,18 @@ ShootController::ShootController()
 	cmd_shoot = nh.serviceClient<roborts_msgs::ShootCmd>("cmd_shoot");
 
 	game_status_sub = nh.subscribe<roborts_msgs::GameStatus>(
-	    "/game_status", 10,
+	    "game_status", 10,
 	    [this](const roborts_msgs::GameStatus::ConstPtr &msg) {
 		    in_play = msg->game_status == roborts_msgs::GameStatus::GAME;
 	    });
 
 	robot_heat_sub = nh.subscribe<roborts_msgs::RobotHeat>(
-	    "/robot_heat", 1, [this](const roborts_msgs::RobotHeat::ConstPtr &msg) {
+	    "robot_heat", 1, [this](const roborts_msgs::RobotHeat::ConstPtr &msg) {
 		    heat = msg->shooter_heat;
 	    });
 
 	robot_status_sub = nh.subscribe<roborts_msgs::RobotStatus>(
-	    "/robot_status", 1,
+	    "robot_status", 1,
 	    [this](const roborts_msgs::RobotStatus::ConstPtr &msg) {
 		    heat_cooling_rate = msg->heat_cooling_rate;
 		    heat_cooling_limit = msg->heat_cooling_limit;
@@ -48,6 +48,12 @@ ShootController::ShootController()
 	control_loop_timer =
 	    nh.createTimer(ros::Duration{0.01},
 	                   [this](const ros::TimerEvent &) { control_loop(); });
+
+	yaw_focus_sub = nh.subscribe<roborts_msgs::YawFocus>(
+	    "cmd_yaw_focus", 1,
+	    [this](const roborts_msgs::YawFocus::ConstPtr &msg) {
+		    yaw_focus = *msg;
+	    });
 }
 
 bool filter_result(const geometry_msgs::Point &pos) {
@@ -92,13 +98,12 @@ void set_pitch(roborts_msgs::GimbalAngle &ctrl,
 	double pitch =
 	    compute_pitch(distance, height, gun_barrel_length, bullet_velocity);
 
+	ctrl.pitch_mode = false;
 	if (std::isnan(pitch)) {
-		ctrl.pitch_mode = true;
 		ctrl.pitch_angle = 0;
 	} else {
 		double pitch_compensation = 0;
 		ros::param::getCached("~pitch_compensation", pitch_compensation);
-		ctrl.pitch_mode = false;
 		ctrl.pitch_angle = -(pitch + pitch_compensation);
 	}
 }
@@ -205,11 +210,15 @@ bool ShootController::track(const geometry_msgs::PointStamped &target_) {
 }
 
 void ShootController::control_loop() {
-	bool tracking_target = false;
+	bool use_moving_reference = false;
 	if (has_last_target) {
-		tracking_target = track(last_target);
+		track(last_target);
+	} else if (yaw_focus.has_focus) {
+		track_yaw_focus(yaw_focus.focus_point);
+	} else {
+		use_moving_reference = true;
 	}
-	track_moving_reference(!tracking_target);
+	track_moving_reference(use_moving_reference);
 }
 
 bool ShootController::shoot() {
@@ -243,7 +252,7 @@ void ShootController::switch_moving_reference(bool control_gimbal) {
 
 	if (control_gimbal) {
 		roborts_msgs::GimbalAngle gimbal_ctrl;
-		gimbal_ctrl.pitch_mode = true;
+		gimbal_ctrl.pitch_mode = false;
 		gimbal_ctrl.pitch_angle = 0;
 		gimbal_ctrl.yaw_mode = false;
 		gimbal_ctrl.yaw_angle = 0;
@@ -288,8 +297,27 @@ void ShootController::track_moving_reference(bool control_gimbal) {
 	}
 
 	if (control_gimbal) {
-		gimbal_ctrl.pitch_mode = true;
+		gimbal_ctrl.pitch_mode = false;
 		gimbal_ctrl.pitch_angle = 0;
 		gimbal_pub.publish(gimbal_ctrl);
 	}
+}
+
+bool ShootController::track_yaw_focus(
+    const geometry_msgs::PointStamped &target) {
+	geometry_msgs::PointStamped target_in_yaw_base;
+	try {
+		tf_buffer.transform(target, target_in_yaw_base, yaw_base_frame,
+		                    ros::Time{0}, fixed_frame, ros::Duration{0.1});
+	} catch (const std::exception &e) {
+		ROS_WARN("Couldn't lookup transform (moving reference): %s", e.what());
+		return false;
+	}
+
+	roborts_msgs::GimbalAngle gimbal_ctrl;
+	set_yaw(gimbal_ctrl, target_in_yaw_base);
+	gimbal_ctrl.pitch_mode = false;
+	gimbal_ctrl.pitch_angle = 0;
+	gimbal_pub.publish(gimbal_ctrl);
+	return true;
 }

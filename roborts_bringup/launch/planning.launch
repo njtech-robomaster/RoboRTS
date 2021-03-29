@@ -9,9 +9,9 @@
 
 		<node name="planning_map_server" pkg="map_server" type="map_server" args="$(find roborts_bringup)/maps/$(arg planner_map).yaml" output="screen" />
 
-		<node pkg="roborts_planning" type="global_planner_node" name="global_planner_node" output="screen" />
-		<node pkg="roborts_planning" type="local_planner_node" name="local_planner_node" output="screen" />
+		<node pkg="roborts_planning" type="global_planner_node" name="global_planner_node" />
+		<node pkg="roborts_planning" type="local_planner_node" name="local_planner_node" />
 	</group>
-	<node pkg="roborts_planning" type="local_planner_test" name="local_planner_test" output="screen" />
-	<node pkg="roborts_planning" type="global_planner_test" name="global_planner_test" output="screen" />
+	<node pkg="roborts_planning" type="local_planner_test" name="local_planner_test" />
+	<node pkg="roborts_planning" type="global_planner_test" name="global_planner_test" />
 </launch>

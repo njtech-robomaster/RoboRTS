@@ -1,0 +1,2 @@
+bool has_focus
+geometry_msgs/PointStamped focus_point

@@ -2,6 +2,7 @@
 <launch>
 	<arg name="debug" default="false" />
 	<arg name="robot_id" default="1" />
+	<arg name="boot_area" default="c3" />
 
 	<node pkg="roborts_base" type="roborts_base_node" name="roborts_base_node" output="screen" respawn="true">
 		<remap from="serial_port" to="~serial_port" />
@@ -34,6 +35,10 @@
 	<node name="trajectory_visualization" pkg="shoot_controller" type="trajectory_visualization" output="screen" />
 	<node name="fric_wheel_control" pkg="shoot_controller" type="fric_wheel_control" output="screen" />
 
+	<node name="simple_decision" pkg="simple_decision" type="simple_decision" output="screen">
+		<param name="boot_area" value="$(arg boot_area)" />
+	</node>
+
 	<node pkg="tf2_ros" type="static_transform_publisher" name="laser_link_broadcaster"
 		args="0.18 0 0.262 3.141592654 0 0 base_link laser_link" output="screen" />
 	<node pkg="tf2_ros" type="static_transform_publisher" name="yaw_base_link_broadcaster"
@@ -49,5 +54,5 @@
 		args="0.20575 0.0325 0.29 0 0.267 -0.03 yaw_link camera_link" if="$(eval robot_id == 1)" output="screen" />
 	<!-- AI Robot 2 -->
 	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
-		args="0.20575 0.0325 0.29 0 0.227 -0.03 yaw_link camera_link" if="$(eval robot_id == 2)" output="screen" />
+		args="0.20575 0.0325 0.29 0 0.224 -0.03 yaw_link camera_link" if="$(eval robot_id == 2)" output="screen" />
 </launch>
