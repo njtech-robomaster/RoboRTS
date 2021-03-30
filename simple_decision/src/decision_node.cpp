@@ -1,5 +1,6 @@
 #include "decision_node.hpp"
 #include "goals.hpp"
+#include <roborts_msgs/GameRobotHP.h>
 #include <roborts_msgs/GameStatus.h>
 #include <roborts_msgs/GameZoneArray.h>
 #include <roborts_msgs/YawFocus.h>
@@ -39,8 +40,8 @@ geometry_msgs::Point get_buff_zone_location(int id) {
 }
 
 DecisionNode::DecisionNode()
-    : boot_area{get_boot_area()},
-      bullet_area{-1}, hp_area{-1}, in_play{false}, state{INIT} {
+    : boot_area{get_boot_area()}, bullet_area{-1}, hp_area{-1}, in_play{false},
+      need_hp_buff{false}, state{INIT}, is_another_dead{false} {
 	ros::NodeHandle nh;
 
 	game_zone_sub = nh.subscribe<roborts_msgs::GameZoneArray>(
@@ -93,6 +94,44 @@ DecisionNode::DecisionNode()
 	    });
 
 	yaw_focus_pub = nh.advertise<roborts_msgs::YawFocus>("cmd_yaw_focus", 1);
+
+	game_robot_hp_sub = nh.subscribe<roborts_msgs::GameRobotHP>(
+	    "game_robot_hp", 1,
+	    [this](const roborts_msgs::GameRobotHP::ConstPtr &msg) {
+		    int robot1_hp;
+		    int robot2_hp;
+
+		    std::string team_color;
+		    ros::param::getCached("team_color", team_color);
+		    if (team_color == "red") {
+			    robot1_hp = msg->red1;
+			    robot2_hp = msg->red2;
+		    } else if (team_color == "blue") {
+			    robot1_hp = msg->blue1;
+			    robot2_hp = msg->blue2;
+		    } else {
+			    ROS_WARN_STREAM("Unrecognized team_color: " << team_color);
+			    return;
+		    }
+
+		    if (robot1_hp == 0) {
+			    std::swap(robot1_hp, robot2_hp);
+		    }
+
+		    need_hp_buff = false;
+		    if (robot2_hp == 0) {
+			    if (robot1_hp < 1800) {
+				    need_hp_buff = true;
+			    }
+			    is_another_dead = true;
+		    } else {
+			    if ((robot1_hp < 1800 && robot2_hp < 1800) ||
+			        std::min(robot1_hp, robot2_hp) < 1000) {
+				    need_hp_buff = true;
+			    }
+			    is_another_dead = false;
+		    }
+	    });
 }
 
 void DecisionNode::go_back_home() {
@@ -117,11 +156,11 @@ bool DecisionNode::try_goto_buff_zone() {
 	}
 
 	int area_to_go = -1;
-	if (robot_id == 1) {
+	if (robot_id == 1 || is_another_dead) {
 		if (bullet_area != -1) {
 			ROS_INFO("Go to bullet area");
 			area_to_go = bullet_area;
-		} else if (hp_area != -1) {
+		} else if (hp_area != -1 && need_hp_buff) {
 			ROS_INFO("Go to hp area");
 			area_to_go = hp_area;
 		}
