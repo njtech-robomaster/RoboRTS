@@ -96,14 +96,23 @@ DecisionNode::DecisionNode()
 }
 
 void DecisionNode::control_loop() {
+	int robot_id = 0;
+	if (!ros::param::getCached("robot_id", robot_id)) {
+		ROS_WARN("robot_id param not found");
+	}
+
 	if (state == STAY_HOME) {
 		int area_to_go = -1;
-		if (bullet_area != -1) {
-			ROS_INFO("Go to bullet area");
-			area_to_go = bullet_area;
-			// } else if (hp_area != -1) {
-			// 	ROS_INFO("Go to hp area");
-			// 	area_to_go = hp_area;
+		if (robot_id == 1) {
+			if (bullet_area != -1) {
+				ROS_INFO("Go to bullet area");
+				area_to_go = bullet_area;
+			} else if (hp_area != -1) {
+				ROS_INFO("Go to hp area");
+				area_to_go = hp_area;
+			}
+		} else if (robot_id == 2) {
+			// stay home
 		}
 
 		roborts_msgs::YawFocus yaw_focus;
