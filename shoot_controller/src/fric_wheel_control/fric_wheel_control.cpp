@@ -14,7 +14,6 @@ class FricWheelControl {
 		    "game_status", 1,
 		    [this](const roborts_msgs::GameStatus::ConstPtr &msg) {
 			    bool fric_ready =
-			        msg->game_status == roborts_msgs::GameStatus::FIVE_SEC_CD ||
 			        msg->game_status == roborts_msgs::GameStatus::GAME;
 
 			    if (!fric_status && fric_ready) {
