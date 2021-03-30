@@ -24,8 +24,11 @@ class DecisionNode {
 	ros::Timer control_loop_timer;
 	bool in_play;
 
-	enum State { STAY_HOME, GO_OUT };
+	enum State { INIT, STAY_HOME, GOING_OUT, GOING_BACK };
 	State state;
 
 	void control_loop();
+	void go_back_home();
+	bool try_goto_buff_zone();
+	void publish_focus_center(bool has_focus);
 };

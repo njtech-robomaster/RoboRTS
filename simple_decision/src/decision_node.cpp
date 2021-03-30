@@ -40,7 +40,7 @@ geometry_msgs::Point get_buff_zone_location(int id) {
 
 DecisionNode::DecisionNode()
     : boot_area{get_boot_area()},
-      bullet_area{-1}, hp_area{-1}, in_play{false}, state{STAY_HOME} {
+      bullet_area{-1}, hp_area{-1}, in_play{false}, state{INIT} {
 	ros::NodeHandle nh;
 
 	game_zone_sub = nh.subscribe<roborts_msgs::GameZoneArray>(
@@ -95,48 +95,80 @@ DecisionNode::DecisionNode()
 	yaw_focus_pub = nh.advertise<roborts_msgs::YawFocus>("cmd_yaw_focus", 1);
 }
 
-void DecisionNode::control_loop() {
+void DecisionNode::go_back_home() {
+	ROS_INFO("Going back home");
+	state = GOING_BACK;
+	goal_executor.goto_goal(boot_area, [this](bool success) {
+		if (success) {
+			ROS_INFO("Arrived home!");
+			state = STAY_HOME;
+		} else {
+			ROS_INFO("Couldn't go back home, try again!");
+			go_back_home();
+		}
+	});
+}
+
+bool DecisionNode::try_goto_buff_zone() {
 	int robot_id = 0;
 	if (!ros::param::getCached("robot_id", robot_id)) {
 		ROS_WARN("robot_id param not found");
+		return false;
 	}
 
-	if (state == STAY_HOME) {
-		int area_to_go = -1;
-		if (robot_id == 1) {
-			if (bullet_area != -1) {
-				ROS_INFO("Go to bullet area");
-				area_to_go = bullet_area;
-			} else if (hp_area != -1) {
-				ROS_INFO("Go to hp area");
-				area_to_go = hp_area;
-			}
-		} else if (robot_id == 2) {
-			// stay home
+	int area_to_go = -1;
+	if (robot_id == 1) {
+		if (bullet_area != -1) {
+			ROS_INFO("Go to bullet area");
+			area_to_go = bullet_area;
+		} else if (hp_area != -1) {
+			ROS_INFO("Go to hp area");
+			area_to_go = hp_area;
 		}
-
-		roborts_msgs::YawFocus yaw_focus;
-		yaw_focus.focus_point.header.frame_id = "map";
-		yaw_focus.focus_point.header.stamp = ros::Time{0};
-
-		if (area_to_go == -1) {
-			self_rotation.start();
-			yaw_focus.has_focus = true;
-		} else {
-			self_rotation.stop();
-			yaw_focus.has_focus = false;
-			state = GO_OUT;
-			goal_executor.goto_goal(
-			    get_buff_zone_location(area_to_go), [this](bool) {
-				    // go back home
-				    ROS_INFO("Arrived buff area");
-				    goal_executor.goto_goal(boot_area, [this](bool) {
-					    // TODO if not succeeded?
-					    state = STAY_HOME;
-					    ROS_INFO("Arrived home");
-				    });
-			    });
-		}
-		yaw_focus_pub.publish(yaw_focus);
+	} else if (robot_id == 2) {
+		// stay home
 	}
+
+	if (area_to_go == -1) {
+		return false;
+	}
+
+	ROS_INFO("Going to buff zone F%d", area_to_go + 1);
+
+	state = GOING_OUT;
+	goal_executor.goto_goal(get_buff_zone_location(area_to_go), [this](bool) {
+		ROS_INFO("Arrived buff area");
+		go_back_home();
+	});
+
+	return true;
+}
+
+void DecisionNode::publish_focus_center(bool has_focus) {
+	roborts_msgs::YawFocus yaw_focus;
+	yaw_focus.focus_point.header.frame_id = "map";
+	yaw_focus.focus_point.header.stamp = ros::Time{0};
+	yaw_focus.focus_point.point.x = 0;
+	yaw_focus.focus_point.point.y = 0;
+	yaw_focus.focus_point.point.z = 0;
+	yaw_focus.has_focus = has_focus;
+	yaw_focus_pub.publish(yaw_focus);
+}
+
+void DecisionNode::control_loop() {
+	bool focus_map_center = false;
+
+	if (state == INIT) {
+		go_back_home();
+	} else if (state == STAY_HOME) {
+		bool go_out = try_goto_buff_zone();
+		if (!go_out) {
+			focus_map_center = true;
+		}
+	} else if (state == GOING_OUT) {
+	} else if (state == GOING_BACK) {
+		try_goto_buff_zone();
+	}
+
+	publish_focus_center(focus_map_center);
 }
