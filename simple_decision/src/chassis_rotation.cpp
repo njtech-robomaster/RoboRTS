@@ -44,20 +44,16 @@ ChassisRotation::ChassisRotation() {
 	    });
 }
 
-bool ChassisRotation::start() {
+void ChassisRotation::start() {
 	if (state == INACTIVE) {
 		state = INITIALIZING;
-		return true;
 	}
-	return false;
 }
 
-bool ChassisRotation::stop() {
+void ChassisRotation::stop() {
 	if (state != INACTIVE) {
 		geometry_msgs::Twist ctrl;
 		cmd_vel_pub.publish(ctrl);
 		state = INACTIVE;
-		return true;
 	}
-	return false;
 }

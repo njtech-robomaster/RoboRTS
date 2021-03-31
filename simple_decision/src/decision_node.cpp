@@ -3,7 +3,6 @@
 #include <roborts_msgs/GameRobotHP.h>
 #include <roborts_msgs/GameStatus.h>
 #include <roborts_msgs/GameZoneArray.h>
-#include <roborts_msgs/RobotStatus.h>
 #include <roborts_msgs/YawFocus.h>
 
 geometry_msgs::Pose get_boot_area() {
@@ -42,8 +41,7 @@ geometry_msgs::Point get_buff_zone_location(int id) {
 
 DecisionNode::DecisionNode()
     : boot_area{get_boot_area()}, bullet_area{-1}, hp_area{-1}, in_play{false},
-      need_hp_buff{false}, state{INIT}, is_another_dead{false}, can_attack{
-                                                                    false} {
+      need_hp_buff{false}, state{INIT}, is_another_dead{false} {
 	ros::NodeHandle nh;
 
 	game_zone_sub = nh.subscribe<roborts_msgs::GameZoneArray>(
@@ -134,12 +132,6 @@ DecisionNode::DecisionNode()
 			    is_another_dead = false;
 		    }
 	    });
-
-	robot_status_sub = nh.subscribe<roborts_msgs::RobotStatus>(
-	    "robot_status", 1,
-	    [this](const roborts_msgs::RobotStatus::ConstPtr &msg) {
-		    can_attack = msg->shooter_enable;
-	    });
 }
 
 void DecisionNode::go_back_home() {
@@ -211,13 +203,6 @@ void DecisionNode::control_loop() {
 		bool go_out = try_goto_buff_zone();
 		if (!go_out) {
 			focus_map_center = true;
-		}
-		if (!go_out && !can_attack) {
-			self_rotation.start();
-		} else {
-			if (self_rotation.stop()) {
-				go_back_home();
-			}
 		}
 	} else if (state == GOING_OUT) {
 	} else if (state == GOING_BACK) {
