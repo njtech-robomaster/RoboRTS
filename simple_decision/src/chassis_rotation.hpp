@@ -11,8 +11,8 @@ class ChassisRotation {
 	double angle_max = M_PI / 6;
 	double angle_speed = 1.8;
 
-	void start();
-	void stop();
+	bool start();
+	bool stop();
 
   private:
 	ros::Subscriber odom_sub;

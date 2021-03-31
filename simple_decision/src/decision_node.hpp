@@ -21,10 +21,12 @@ class DecisionNode {
 	ros::Subscriber game_status_sub;
 	ros::Subscriber game_zone_sub;
 	ros::Subscriber game_robot_hp_sub;
+	ros::Subscriber robot_status_sub;
 	ros::Publisher yaw_focus_pub;
 	ros::Timer control_loop_timer;
 	bool in_play;
 	bool need_hp_buff;
+	bool can_attack;
 	bool is_another_dead;
 
 	enum State { INIT, STAY_HOME, GOING_OUT, GOING_BACK };
