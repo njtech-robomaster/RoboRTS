@@ -30,7 +30,7 @@
 
 	<node name="shoot_controller" pkg="shoot_controller" type="shoot_controller" output="screen">
 		<param name="pitch_compensation" value="0.03" if="$(eval robot_id == 1)" />
-		<param name="pitch_compensation" value="0.02" if="$(eval robot_id == 2)" />
+		<param name="pitch_compensation" value="0.012" if="$(eval robot_id == 2)" />
 		<param name="debug_print_target" value="$(arg debug)" />
 	</node>
 	<node name="trajectory_visualization" pkg="shoot_controller" type="trajectory_visualization" output="screen" />
@@ -55,5 +55,5 @@
 		args="0.20575 0.0325 0.29 0 0.244 -0.06 yaw_link camera_link" if="$(eval robot_id == 1)" output="screen" />
 	<!-- AI Robot 2 -->
 	<node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
-		args="0.20575 0.0325 0.29 0 0.220 -0.03 yaw_link camera_link" if="$(eval robot_id == 2)" output="screen" />
+		args="0.20575 0.0325 0.29 0 0.217 -0.03 yaw_link camera_link" if="$(eval robot_id == 2)" output="screen" />
 </launch>
