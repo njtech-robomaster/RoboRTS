@@ -15,11 +15,12 @@ geometry_msgs::Pose pose(double x, double y, double yaw) {
 }
 
 const double fix = .20;
+const double angle_fix = -M_PI / 4.0;
 
 const geometry_msgs::Pose C1 = pose(-3.54 + fix, 1.74, 0);
-const geometry_msgs::Pose C2 = pose(-3.54, -1.74 + fix, M_PI / 2);
+const geometry_msgs::Pose C2 = pose(-3.54, -1.74 + fix, M_PI / 2 + angle_fix);
 const geometry_msgs::Pose C3 = pose(3.54 - fix, -1.74, M_PI);
-const geometry_msgs::Pose C4 = pose(3.54, 1.74 - fix, -M_PI / 2);
+const geometry_msgs::Pose C4 = pose(3.54, 1.74 - fix, -M_PI / 2 + angle_fix);
 
 geometry_msgs::Point point(double x, double y) {
 	geometry_msgs::Point it;
