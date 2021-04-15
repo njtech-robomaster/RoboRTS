@@ -1,16 +1,10 @@
 #include "shoot_controller.hpp"
 #include "trajectory_solver.hpp"
-#include <roborts_msgs/GameStatus.h>
 #include <roborts_msgs/GimbalAngle.h>
-#include <roborts_msgs/RobotHeat.h>
-#include <roborts_msgs/RobotStatus.h>
-#include <roborts_msgs/ShootCmd.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 ShootController::ShootController()
-    : has_last_target{false}, in_play{false}, heat{0}, heat_cooling_rate{0},
-      heat_cooling_limit{0}, has_moving_reference{false},
-      tf_buffer{ros::Duration{10}}, tf_listener{tf_buffer} {
+    : has_last_target{false}, tf_buffer{ros::Duration{3}}, tf_listener{tf_buffer} {
 	ros::NodeHandle nh;
 	gimbal_pub = nh.advertise<roborts_msgs::GimbalAngle>("cmd_gimbal_angle", 1);
 
@@ -19,41 +13,15 @@ ShootController::ShootController()
 	ros::param::get("~shoot_frame", shoot_frame);
 	ros::param::get("~fixed_frame", fixed_frame);
 
-	cmd_shoot = nh.serviceClient<roborts_msgs::ShootCmd>("cmd_shoot");
-
-	game_status_sub = nh.subscribe<roborts_msgs::GameStatus>(
-	    "game_status", 10,
-	    [this](const roborts_msgs::GameStatus::ConstPtr &msg) {
-		    in_play = msg->game_status == roborts_msgs::GameStatus::GAME;
-	    });
-
-	robot_heat_sub = nh.subscribe<roborts_msgs::RobotHeat>(
-	    "robot_heat", 1, [this](const roborts_msgs::RobotHeat::ConstPtr &msg) {
-		    heat = msg->shooter_heat;
-	    });
-
-	robot_status_sub = nh.subscribe<roborts_msgs::RobotStatus>(
-	    "robot_status", 1,
-	    [this](const roborts_msgs::RobotStatus::ConstPtr &msg) {
-		    heat_cooling_rate = msg->heat_cooling_rate;
-		    heat_cooling_limit = msg->heat_cooling_limit;
-	    });
-
 	armor_target_sub = nh.subscribe<geometry_msgs::PointStamped>(
 	    "armor_target", 1,
 	    [this](const geometry_msgs::PointStamped::ConstPtr &target) {
-		    aim_and_shoot(*target);
+		    aim(*target);
 	    });
 
 	control_loop_timer =
 	    nh.createTimer(ros::Duration{0.01},
 	                   [this](const ros::TimerEvent &) { control_loop(); });
-
-	yaw_focus_sub = nh.subscribe<roborts_msgs::YawFocus>(
-	    "cmd_yaw_focus", 1,
-	    [this](const roborts_msgs::YawFocus::ConstPtr &msg) {
-		    yaw_focus = *msg;
-	    });
 }
 
 bool filter_result(const geometry_msgs::Point &pos) {
@@ -62,7 +30,7 @@ bool filter_result(const geometry_msgs::Point &pos) {
 	if (pos.z < height_min)
 		return false;
 
-	double height_max = 0.5;
+	double height_max = 1.6;
 	ros::param::getCached("~target_height_max", height_max);
 	if (pos.z > height_max)
 		return false;
@@ -115,7 +83,7 @@ void set_yaw(roborts_msgs::GimbalAngle &ctrl,
 	    std::atan2(target_in_yaw_base.point.y, target_in_yaw_base.point.x);
 }
 
-bool ShootController::aim_and_shoot(
+bool ShootController::aim(
     const geometry_msgs::PointStamped &target_) {
 	geometry_msgs::PointStamped target_in_pitch_base;
 	geometry_msgs::PointStamped target_in_yaw_base;
@@ -157,10 +125,6 @@ bool ShootController::aim_and_shoot(
 	          shoot_in_pitch_base, speed_monitor.get_current_bullet_velocity());
 
 	gimbal_pub.publish(gimbal_ctrl);
-
-	if (in_play) {
-		shoot();
-	}
 
 	return true;
 }
@@ -210,114 +174,8 @@ bool ShootController::track(const geometry_msgs::PointStamped &target_) {
 }
 
 void ShootController::control_loop() {
-	bool use_moving_reference = false;
 	if (has_last_target) {
 		track(last_target);
-	} else if (yaw_focus.has_focus) {
-		track_yaw_focus(yaw_focus.focus_point);
-	} else {
-		use_moving_reference = true;
-	}
-	track_moving_reference(use_moving_reference);
-}
-
-bool ShootController::shoot() {
-	int bullets_per_shoot = 1;
-	ros::param::getCached("~bullets_per_shoot", bullets_per_shoot);
-
-	if (heat >
-	    heat_cooling_limit - 3 * bullets_per_shoot *
-	                             speed_monitor.get_current_bullet_velocity()) {
-		// reserved heat = 3 * estimated heat per shoot
-		// one for the bullet to be emitted
-		// one for the pending bullet (if any)
-		// one for the safety margin
-		return false;
-	}
-
-	roborts_msgs::ShootCmd srv;
-	srv.request.mode = roborts_msgs::ShootCmd::Request::ONCE;
-	srv.request.number = bullets_per_shoot;
-	cmd_shoot.call(srv);
-	return true;
-}
-
-void ShootController::switch_moving_reference(bool control_gimbal) {
-	moving_reference.header.frame_id = yaw_base_frame;
-	moving_reference.header.stamp = ros::Time::now();
-	moving_reference.point.x = 30.0;
-	ros::param::getCached("~moving_reference_distance",
-	                      moving_reference.point.x);
-	has_moving_reference = true;
-
-	if (control_gimbal) {
-		roborts_msgs::GimbalAngle gimbal_ctrl;
-		gimbal_ctrl.pitch_mode = false;
-		gimbal_ctrl.pitch_angle = 0;
-		gimbal_ctrl.yaw_mode = false;
-		gimbal_ctrl.yaw_angle = 0;
-		gimbal_pub.publish(gimbal_ctrl);
 	}
 }
 
-void ShootController::track_moving_reference(bool control_gimbal) {
-	if (!has_moving_reference) {
-		switch_moving_reference(control_gimbal);
-		return;
-	}
-
-	double moving_reference_duration = 2.0;
-	ros::param::getCached("~moving_reference_duration",
-	                      moving_reference_duration);
-	if (moving_reference.header.stamp +
-	        ros::Duration{moving_reference_duration} <
-	    ros::Time::now()) {
-		switch_moving_reference(control_gimbal);
-		return;
-	}
-
-	geometry_msgs::PointStamped reference_in_yaw_base;
-	try {
-		tf_buffer.transform(moving_reference, reference_in_yaw_base,
-		                    yaw_base_frame, ros::Time{0}, fixed_frame,
-		                    ros::Duration{0.1});
-	} catch (const std::exception &e) {
-		ROS_WARN("Couldn't lookup transform (moving reference): %s", e.what());
-		return;
-	}
-
-	roborts_msgs::GimbalAngle gimbal_ctrl;
-	set_yaw(gimbal_ctrl, reference_in_yaw_base);
-
-	double angle_max = 1.0;
-	ros::param::getCached("~moving_reference_max_angle", angle_max);
-	if (std::abs(gimbal_ctrl.yaw_angle) > angle_max) {
-		switch_moving_reference(control_gimbal);
-		return;
-	}
-
-	if (control_gimbal) {
-		gimbal_ctrl.pitch_mode = false;
-		gimbal_ctrl.pitch_angle = 0;
-		gimbal_pub.publish(gimbal_ctrl);
-	}
-}
-
-bool ShootController::track_yaw_focus(
-    const geometry_msgs::PointStamped &target) {
-	geometry_msgs::PointStamped target_in_yaw_base;
-	try {
-		tf_buffer.transform(target, target_in_yaw_base, yaw_base_frame,
-		                    ros::Time{0}, fixed_frame, ros::Duration{0.1});
-	} catch (const std::exception &e) {
-		ROS_WARN("Couldn't lookup transform (moving reference): %s", e.what());
-		return false;
-	}
-
-	roborts_msgs::GimbalAngle gimbal_ctrl;
-	set_yaw(gimbal_ctrl, target_in_yaw_base);
-	gimbal_ctrl.pitch_mode = false;
-	gimbal_ctrl.pitch_angle = 0;
-	gimbal_pub.publish(gimbal_ctrl);
-	return true;
-}

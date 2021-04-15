@@ -12,26 +12,10 @@ int main(int argc, char **argv) {
 			    return;
 		    }
 		    robot_id = msg->id;
-		    switch (robot_id) {
-		    case 1:
-			    ros::param::set("team_color", "red");
-			    ros::param::set("robot_id", 1);
-			    break;
-		    case 2:
-			    ros::param::set("team_color", "red");
-			    ros::param::set("robot_id", 2);
-			    break;
-		    case 101:
-			    ros::param::set("team_color", "blue");
-			    ros::param::set("robot_id", 1);
-			    break;
-		    case 102:
-			    ros::param::set("team_color", "blue");
-			    ros::param::set("robot_id", 2);
-			    break;
-		    default:
-			    ROS_WARN("Unrecognized robot id: %d", robot_id);
-			    break;
+		    if (robot_id < 100) {
+		    	ros::param::set("team_color", "red");
+		    } else {
+		    	ros::param::set("team_color", "blue");
 		    }
 	    });
 
