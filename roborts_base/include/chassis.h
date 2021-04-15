@@ -74,6 +74,8 @@ class Chassis: public Module{
    */
   void ChassisSpeedAccCtrlCallback(const roborts_msgs::TwistAccel::ConstPtr &vel_acc);
 
+  void ChassisCurrentLimitCtrlCallback(const roborts_msgs::CurrentLimit::ConstPtr &current_limit);
+
   //! sdk version client
   std::shared_ptr<roborts_sdk::Client<roborts_sdk::cmd_version_id,
                                       roborts_sdk::cmd_version_id>> verison_client_;
@@ -87,6 +89,8 @@ class Chassis: public Module{
   std::shared_ptr<roborts_sdk::Publisher<roborts_sdk::cmd_chassis_speed>> chassis_speed_pub_;
   //! sdk publisher for chassis speed and acceleration control
   std::shared_ptr<roborts_sdk::Publisher<roborts_sdk::cmd_chassis_spd_acc>> chassis_spd_acc_pub_;
+  //! sdk publisher for chassis current limit control
+  std::shared_ptr<roborts_sdk::Publisher<roborts_sdk::cmd_chassis_current_limit>> chassis_current_limit_pub_;
 
   //! ros node handler
   ros::NodeHandle ros_nh_;
@@ -94,6 +98,8 @@ class Chassis: public Module{
   ros::Subscriber ros_sub_cmd_chassis_vel_;
   //! ros subscriber for chassis speed and acceleration control
   ros::Subscriber ros_sub_cmd_chassis_vel_acc_;
+  //! ros subscriber for chassis current limit control
+  ros::Subscriber ros_sub_cmd_chassis_current_limit_;
   //! ros publisher for odometry information
   ros::Publisher ros_odom_pub_;
   //! ros publisher for uwb information

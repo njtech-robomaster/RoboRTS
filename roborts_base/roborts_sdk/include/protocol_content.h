@@ -169,6 +169,11 @@ typedef struct {
   int16_t rotate_y_offset;
 } cmd_chassis_spd_acc;
 
+#define CMD_CHASSIS_CURRENT_LIMIT       (0x0206u)
+typedef struct {
+    int32_t current_limit;
+} cmd_chassis_current_limit;
+
 /*-----------------------------GIMBAL_CMD_SET---- 0x03 ---------------------*/
 /*
  *  cmd_set:  GIMBAL_CMD_SET

@@ -24,6 +24,7 @@ add_message_files(
         DIRECTORY msg/chassis
         FILES
         TwistAccel.msg
+        CurrentLimit.msg
 )
 
 # gimbal message

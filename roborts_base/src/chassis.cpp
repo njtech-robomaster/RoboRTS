@@ -57,6 +57,8 @@ void Chassis::SDK_Init(){
                                                                                 MANIFOLD2_ADDRESS, CHASSIS_ADDRESS);
   chassis_spd_acc_pub_ = handle_->CreatePublisher<roborts_sdk::cmd_chassis_spd_acc>(CHASSIS_CMD_SET, CMD_SET_CHASSIS_SPD_ACC,
                                                                                     MANIFOLD2_ADDRESS, CHASSIS_ADDRESS);
+  chassis_current_limit_pub_ = handle_->CreatePublisher<roborts_sdk::cmd_chassis_current_limit>(CHASSIS_CMD_SET, CMD_CHASSIS_CURRENT_LIMIT,
+                                                                                                MANIFOLD2_ADDRESS, CHASSIS_ADDRESS);
 
   heartbeat_pub_ = handle_->CreatePublisher<roborts_sdk::cmd_heartbeat>(UNIVERSAL_CMD_SET, CMD_HEARTBEAT,
                                                                         MANIFOLD2_ADDRESS, CHASSIS_ADDRESS);
@@ -77,6 +79,7 @@ void Chassis::ROS_Init(){
   //ros subscriber
   ros_sub_cmd_chassis_vel_ = ros_nh_.subscribe("cmd_vel", 1, &Chassis::ChassisSpeedCtrlCallback, this);
   ros_sub_cmd_chassis_vel_acc_ = ros_nh_.subscribe("cmd_vel_acc", 1, &Chassis::ChassisSpeedAccCtrlCallback, this);
+  ros_sub_cmd_chassis_current_limit_ = ros_nh_.subscribe("cmd_chassis_current_limit", 1, &Chassis::ChassisCurrentLimitCtrlCallback, this);
 
 
   //ros_message_init
@@ -143,5 +146,15 @@ void Chassis::ChassisSpeedAccCtrlCallback(const roborts_msgs::TwistAccel::ConstP
   chassis_spd_acc.rotate_x_offset = 0;
   chassis_spd_acc.rotate_y_offset = 0;
   chassis_spd_acc_pub_->Publish(chassis_spd_acc);
+}
+
+void Chassis::ChassisCurrentLimitCtrlCallback(const roborts_msgs::CurrentLimit::ConstPtr &current_limit){
+  roborts_sdk::cmd_chassis_current_limit chassis_current_limit;
+  if (current_limit->is_limited && current_limit->current_limit > 0) {
+    chassis_current_limit.current_limit = (int32_t)(current_limit->current_limit * 819.2);
+  } else {
+    chassis_current_limit.current_limit = -1;
+  }
+  chassis_current_limit_pub_->Publish(chassis_current_limit);
 }
 }

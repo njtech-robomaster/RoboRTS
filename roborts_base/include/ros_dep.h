@@ -27,6 +27,7 @@
 #include <geometry_msgs/Twist.h>
 
 #include "roborts_msgs/TwistAccel.h"
+#include "roborts_msgs/CurrentLimit.h"
 
 
 //! Gimbal
