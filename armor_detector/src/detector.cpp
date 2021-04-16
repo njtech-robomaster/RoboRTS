@@ -4,11 +4,32 @@
 #include <ros/console.h>
 #include <ros/ros.h>
 
+using namespace std::chrono;
+const auto max_kcf_tracking_time = 3s;
+
 const float shrink_factor = .3;
+
+const float ROI_WIDTH_RATIO = 1.6;
+const float ROI_HEIGHT_RATIO = 1.1;
+
+cv::Rect get_armor_roi(const std::vector<cv::Point2f> &v) {
+	float min_x = std::min({v[0].x, v[1].x, v[2].x, v[3].x});
+	float max_x = std::max({v[0].x, v[1].x, v[2].x, v[3].x});
+	float min_y = std::min({v[0].y, v[1].y, v[2].y, v[3].y});
+	float max_y = std::max({v[0].y, v[1].y, v[2].y, v[3].y});
+
+	float width = (max_x - min_x) * ROI_WIDTH_RATIO;
+	float height = (max_y - min_y) * ROI_HEIGHT_RATIO;
+	float x0 = (min_x + max_x) / 2 - width / 2;
+	float y0 = (min_y + max_y) / 2 - height / 2;
+	return {(int)std::round(x0), (int)std::round(y0), (int)std::round(width),
+	        (int)std::round(height)};
+}
 
 RSArmorDetector::RSArmorDetector(cv::Size2i color_resolution,
                                  cv::Size2i depth_resolution)
-    : align_to_color{RS2_STREAM_COLOR}, is_disconnected{false} {
+    : align_to_color{RS2_STREAM_COLOR}, is_disconnected{false}, kcf_tracker{
+                                                                    nullptr} {
 	rs2::config rs_config;
 	rs_config.enable_stream(RS2_STREAM_COLOR, color_resolution.width,
 	                        color_resolution.height, RS2_FORMAT_BGR8);
@@ -87,6 +108,12 @@ void setup_target_color(rm::ArmorDetector &seu_armor_detector) {
 	}
 }
 
+void RSArmorDetector::reset_kcf_tracking() {
+	last_detected_color_frame.release();
+	delete kcf_tracker;
+	kcf_tracker = nullptr;
+}
+
 bool RSArmorDetector::detect(DetectResult &result) {
 	auto color_frame = frames.get_color_frame();
 	auto depth_frame = frames.get_depth_frame();
@@ -95,28 +122,81 @@ bool RSArmorDetector::detect(DetectResult &result) {
 
 	setup_target_color(seu_armor_detector);
 	seu_armor_detector.loadImg(color_mat);
-	if (seu_armor_detector.detect() != rm::ArmorDetector::ARMOR_LOCAL)
-		return false;
-	if (seu_armor_detector.getArmorType() != rm::SMALL_ARMOR)
-		return false;
 
-	auto verticies = seu_armor_detector.getArmorVertex();
+	bool use_average_depth;
+
+	std::vector<cv::Point2f> verticies;
+	if (seu_armor_detector.detect() == rm::ArmorDetector::ARMOR_LOCAL) {
+		verticies = seu_armor_detector.getArmorVertex();
+		result.is_estimated = false;
+		use_average_depth = true;
+
+		reset_kcf_tracking();
+		last_detected_time = high_resolution_clock::now();
+		color_mat.copyTo(last_detected_color_frame);
+		last_detected_roi = get_armor_roi(verticies);
+	} else {
+
+		if (kcf_tracker == nullptr && !last_detected_color_frame.empty()) {
+			kcf_tracker = new KCFTracker;
+			try {
+				kcf_tracker->init(last_detected_roi, last_detected_color_frame);
+			} catch (const std::exception &e) {
+				ROS_ERROR("KCF init error: %s", e.what());
+				reset_kcf_tracking();
+			}
+		}
+
+		if (kcf_tracker == nullptr) {
+			return false;
+		}
+
+		if (high_resolution_clock::now() - last_detected_time >
+		    max_kcf_tracking_time) {
+			ROS_INFO("KCF timeout");
+			reset_kcf_tracking();
+			return false;
+		}
+
+		cv::Rect roi;
+		try {
+			roi = kcf_tracker->update(color_mat);
+		} catch (const std::exception &e) {
+			ROS_ERROR("KCF update error: %s", e.what());
+			reset_kcf_tracking();
+			return false;
+		}
+
+		result.is_estimated = true;
+		use_average_depth = false;
+		verticies.push_back({(float)(roi.x), (float)(roi.y)});
+		verticies.push_back({(float)(roi.x + roi.width), (float)(roi.y)});
+		verticies.push_back(
+		    {(float)(roi.x + roi.width), (float)(roi.y + roi.height)});
+		verticies.push_back({(float)(roi.x), (float)(roi.y + roi.height)});
+	}
 
 	// calculate 2d center
 	cv::Point2f center_point =
 	    (verticies[0] + verticies[1] + verticies[2] + verticies[3]) / 4;
 
-	// calculate shrinked quad
-	std::vector<cv::Point2f> shrinked_verticies;
-	for (auto &origin : verticies) {
-		cv::Point2f shrinked =
-		    (origin - center_point) * (1 - shrink_factor) + center_point;
-		shrinked_verticies.push_back(shrinked);
+	uint16_t distance_raw;
+
+	if (use_average_depth) {
+		// calculate shrinked quad
+		std::vector<cv::Point2f> shrinked_verticies;
+		for (auto &origin : verticies) {
+			cv::Point2f shrinked =
+			    (origin - center_point) * (1 - shrink_factor) + center_point;
+			shrinked_verticies.push_back(shrinked);
+		}
+
+		distance_raw = mean_distance_within_quad(depth_mat, shrinked_verticies);
+	} else {
+		distance_raw =
+		    depth_mat.at<uint16_t>((int)center_point.y, (int)center_point.x);
 	}
 
-	// calculate distance
-	uint16_t distance_raw =
-	    mean_distance_within_quad(depth_mat, shrinked_verticies);
 	if (distance_raw == 0) // no depth info is available
 		return false;
 	float distance = distance_raw * depth_frame.get_units();
