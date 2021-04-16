@@ -136,13 +136,6 @@ void RefereeSystem::GameEventCallback(const std::shared_ptr<roborts_sdk::cmd_gam
 void RefereeSystem::RobotStatusCallback(const std::shared_ptr<roborts_sdk::cmd_game_robot_status> raw_robot_status){
   roborts_msgs::RobotStatus robot_status;
 
-  if ( raw_robot_status->robot_id != 1 && raw_robot_status->robot_id != 2 && 
-       raw_robot_status->robot_id != 101 && raw_robot_status->robot_id != 102 ){
-
-    ROS_WARN("For AI challenge, "
-             "please set robot id to Blue1/2 or Red1/2 in the referee system main control module, "
-             "currently the id is %u", robot_status.id);
-  }  
   robot_status.id = raw_robot_status->robot_id;
   robot_status.level = raw_robot_status->robot_level;
   robot_status.remain_hp = raw_robot_status->remain_HP;
