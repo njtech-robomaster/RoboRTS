@@ -151,7 +151,7 @@ void Chassis::ChassisSpeedAccCtrlCallback(const roborts_msgs::TwistAccel::ConstP
 void Chassis::ChassisCurrentLimitCtrlCallback(const roborts_msgs::CurrentLimit::ConstPtr &current_limit){
   roborts_sdk::cmd_chassis_current_limit chassis_current_limit;
   if (current_limit->is_limited && current_limit->current_limit > 0) {
-    chassis_current_limit.current_limit = (int32_t)(current_limit->current_limit * 819.2);
+    chassis_current_limit.current_limit = (int32_t)(current_limit->current_limit);
   } else {
     chassis_current_limit.current_limit = -1;
   }

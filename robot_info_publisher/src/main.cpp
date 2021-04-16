@@ -11,7 +11,6 @@ int main(int argc, char **argv) {
 	    "cmd_chassis_current_limit", 1, true);
 
 	uint8_t robot_id = 0;
-	double power_limit = -1.;
 
 	auto robot_status_sub = nh.subscribe<roborts_msgs::RobotStatus>(
 	    "robot_status", 1, [&](const roborts_msgs::RobotStatus::ConstPtr &msg) {
@@ -24,20 +23,9 @@ int main(int argc, char **argv) {
 			    }
 		    }
 
-		    power_limit = msg->chassis_power_limit;
-	    });
-
-	auto robot_heat_sub = nh.subscribe<roborts_msgs::RobotHeat>(
-	    "robot_heat", 1, [&](const roborts_msgs::RobotHeat::ConstPtr &msg) {
-		    roborts_msgs::CurrentLimit limit_ctrl;
-		    if (power_limit > 0) {
-			    double chassis_volt = msg->chassis_volt / 1000.0;
-			    double max_current = power_limit / chassis_volt;
-			    limit_ctrl.is_limited = true;
-			    limit_ctrl.current_limit = max_current;
-		    } else {
-			    limit_ctrl.is_limited = false;
-		    }
+			roborts_msgs::CurrentLimit limit_ctrl;
+		    limit_ctrl.is_limited = true;
+			limit_ctrl.current_limit = msg->chassis_power_limit;
 		    current_limit_pub.publish(limit_ctrl);
 	    });
 

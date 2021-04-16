@@ -97,8 +97,6 @@ bool RSArmorDetector::detect(DetectResult &result) {
 	seu_armor_detector.loadImg(color_mat);
 	if (seu_armor_detector.detect() != rm::ArmorDetector::ARMOR_LOCAL)
 		return false;
-	if (seu_armor_detector.getArmorType() != rm::SMALL_ARMOR)
-		return false;
 
 	auto verticies = seu_armor_detector.getArmorVertex();
 
