@@ -15,17 +15,16 @@ int main(int argc, char **argv) {
 
 	auto robot_status_sub = nh.subscribe<roborts_msgs::RobotStatus>(
 	    "robot_status", 1, [&](const roborts_msgs::RobotStatus::ConstPtr &msg) {
-		    if (msg->id == robot_id) {
-			    return;
-		    }
-		    robot_id = msg->id;
-		    if (robot_id < 100) {
-			    ros::param::set("team_color", "red");
-		    } else {
-			    ros::param::set("team_color", "blue");
+		    if (msg->id != robot_id) {
+			    robot_id = msg->id;
+			    if (robot_id < 100) {
+				    ros::param::set("team_color", "red");
+			    } else {
+				    ros::param::set("team_color", "blue");
+			    }
 		    }
 
-		    power_limit = msg->chassis_power_limit / 256.0;
+		    power_limit = msg->chassis_power_limit;
 	    });
 
 	auto robot_heat_sub = nh.subscribe<roborts_msgs::RobotHeat>(
