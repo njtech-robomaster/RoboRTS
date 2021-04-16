@@ -155,6 +155,9 @@ void RefereeSystem::RobotStatusCallback(const std::shared_ptr<roborts_sdk::cmd_g
   robot_status.chassis_enable = bool(raw_robot_status->mains_power_chassis_output);
   robot_status.gimbal_enable = bool(raw_robot_status->mains_power_gimbal_output);
   robot_status.shooter_enable = bool(raw_robot_status->mains_power_shooter_output);
+
+  robot_status.chassis_power_limit = raw_robot_status->chassis_power_limit;
+
   ros_robot_status_pub_.publish(robot_status);
 }
 

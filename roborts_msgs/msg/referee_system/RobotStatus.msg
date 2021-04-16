@@ -11,3 +11,5 @@ uint16 heat_speed_limit
 bool gimbal_enable
 bool chassis_enable
 bool shooter_enable
+
+uint16 chassis_power_limit
