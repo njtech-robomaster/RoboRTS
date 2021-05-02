@@ -12,9 +12,10 @@
 
 	<node name="armor_detector" pkg="armor_detector" type="armor_detector" output="screen" respawn="true">
 		<param name="camera_frame" value="camera_link_optical" />
+		<param name="exposure_abosolute" value="80.0" />
 	</node>
 
-	<param name="initial_bullet_velocity" value="18.6" />
+	<param name="initial_bullet_velocity" value="13.5" />
 
 	<node name="shoot_controller" pkg="shoot_controller" type="shoot_controller" output="screen">
 		<param name="pitch_compensation" value="0.012" />

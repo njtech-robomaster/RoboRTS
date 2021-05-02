@@ -27,6 +27,16 @@ RSArmorDetector::RSArmorDetector(cv::Size2i color_resolution,
 		}
 	});
 
+	float exposure_abosolute = 80.0;
+	ros::param::get("~exposure_abosolute", exposure_abosolute);
+	for (auto &sensor : device.query_sensors()){
+		if (sensor.is<rs2::color_sensor>()) {
+			sensor.set_option(rs2_option::RS2_OPTION_EXPOSURE,
+			                  exposure_abosolute);
+			ROS_INFO("Setting exposure to %f", exposure_abosolute);
+		}
+	}
+
 	rm::ArmorParam armor_param;
 	seu_armor_detector.init(armor_param);
 }
