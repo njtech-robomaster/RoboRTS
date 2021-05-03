@@ -32,6 +32,7 @@
 		<param name="pitch_compensation" value="0.03" if="$(eval robot_id == 1)" />
 		<param name="pitch_compensation" value="0.012" if="$(eval robot_id == 2)" />
 		<param name="debug_print_target" value="$(arg debug)" />
+		<param name="gun_barrel_length" value="0.19098" />
 	</node>
 	<node name="trajectory_visualization" pkg="shoot_controller" type="trajectory_visualization" output="screen" />
 	<node name="fric_wheel_control" pkg="shoot_controller" type="fric_wheel_control" output="screen" />

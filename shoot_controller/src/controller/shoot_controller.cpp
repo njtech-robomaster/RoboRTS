@@ -16,8 +16,9 @@ ShootController::ShootController()
 
 	ros::param::get("~yaw_base_frame", yaw_base_frame);
 	ros::param::get("~pitch_base_frame", pitch_base_frame);
-	ros::param::get("~shoot_frame", shoot_frame);
 	ros::param::get("~fixed_frame", fixed_frame);
+	ros::param::get("~gun_barrel_length", gun_barrel_length);
+	ROS_INFO("Gun barrel length is %lf", gun_barrel_length);
 
 	cmd_shoot = nh.serviceClient<roborts_msgs::ShootCmd>("cmd_shoot");
 
@@ -85,12 +86,8 @@ bool filter_result(const geometry_msgs::Point &pos) {
 void set_pitch(roborts_msgs::GimbalAngle &ctrl,
                const geometry_msgs::PointStamped &target_in_pitch_base,
                const geometry_msgs::PointStamped &target_in_yaw_base,
-               const geometry_msgs::PointStamped &shoot_in_pitch_base,
-               double bullet_velocity) {
-	double gun_barrel_length =
-	    std::sqrt(shoot_in_pitch_base.point.x * shoot_in_pitch_base.point.x +
-	              shoot_in_pitch_base.point.y * shoot_in_pitch_base.point.y +
-	              shoot_in_pitch_base.point.z * shoot_in_pitch_base.point.z);
+               double bullet_velocity,
+               double gun_barrel_length) {
 	double distance =
 	    std::sqrt(target_in_yaw_base.point.x * target_in_yaw_base.point.x +
 	              target_in_yaw_base.point.y * target_in_yaw_base.point.y);
@@ -119,16 +116,11 @@ bool ShootController::aim_and_shoot(
     const geometry_msgs::PointStamped &target_) {
 	geometry_msgs::PointStamped target_in_pitch_base;
 	geometry_msgs::PointStamped target_in_yaw_base;
-	geometry_msgs::PointStamped shoot_in_pitch_base;
-	shoot_in_pitch_base.header.frame_id = shoot_frame;
-	shoot_in_pitch_base.header.stamp = target_.header.stamp;
 	try {
 		tf_buffer.transform(target_, target_in_pitch_base, pitch_base_frame,
 		                    ros::Duration{0.1});
 		tf_buffer.transform(target_, target_in_yaw_base, yaw_base_frame,
 		                    ros::Duration{0.1});
-		tf_buffer.transform(shoot_in_pitch_base, shoot_in_pitch_base,
-		                    pitch_base_frame, ros::Duration{0.1});
 	} catch (const std::exception &e) {
 		ROS_WARN("Couldn't lookup transform: %s", e.what());
 		return false;
@@ -154,7 +146,7 @@ bool ShootController::aim_and_shoot(
 	roborts_msgs::GimbalAngle gimbal_ctrl;
 	set_yaw(gimbal_ctrl, target_in_yaw_base);
 	set_pitch(gimbal_ctrl, target_in_pitch_base, target_in_yaw_base,
-	          shoot_in_pitch_base, speed_monitor.get_current_bullet_velocity());
+	          speed_monitor.get_current_bullet_velocity(), gun_barrel_length);
 
 	gimbal_pub.publish(gimbal_ctrl);
 
@@ -168,17 +160,11 @@ bool ShootController::aim_and_shoot(
 bool ShootController::track(const geometry_msgs::PointStamped &target_) {
 	geometry_msgs::PointStamped target_in_pitch_base;
 	geometry_msgs::PointStamped target_in_yaw_base;
-	geometry_msgs::PointStamped shoot_in_pitch_base;
-	shoot_in_pitch_base.header.frame_id = shoot_frame;
-	shoot_in_pitch_base.header.stamp = target_.header.stamp;
 	try {
 		tf_buffer.transform(target_, target_in_pitch_base, pitch_base_frame,
 		                    ros::Time{0}, fixed_frame, ros::Duration{0.1});
 		tf_buffer.transform(target_, target_in_yaw_base, yaw_base_frame,
 		                    ros::Time{0}, fixed_frame, ros::Duration{0.1});
-		tf_buffer.transform(shoot_in_pitch_base, shoot_in_pitch_base,
-		                    pitch_base_frame, ros::Time{0}, pitch_base_frame,
-		                    ros::Duration{0.1});
 	} catch (const tf2::ExtrapolationException &e) {
 		if (target_.header.stamp + tf_buffer.getCacheLength() <
 		    ros::Time::now()) {
@@ -202,7 +188,7 @@ bool ShootController::track(const geometry_msgs::PointStamped &target_) {
 	roborts_msgs::GimbalAngle gimbal_ctrl;
 	set_yaw(gimbal_ctrl, target_in_yaw_base);
 	set_pitch(gimbal_ctrl, target_in_pitch_base, target_in_yaw_base,
-	          shoot_in_pitch_base, speed_monitor.get_current_bullet_velocity());
+	          speed_monitor.get_current_bullet_velocity(), gun_barrel_length);
 
 	gimbal_pub.publish(gimbal_ctrl);
 

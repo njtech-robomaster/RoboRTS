@@ -22,7 +22,7 @@ class ShootController {
 	std::string fixed_frame = "odom";
 	std::string yaw_base_frame = "yaw_base_link";
 	std::string pitch_base_frame = "pitch_base_link";
-	std::string shoot_frame = "shoot_link";
+	double gun_barrel_length = 0.0;
 
 	bool has_last_target;
 	geometry_msgs::PointStamped last_target;
