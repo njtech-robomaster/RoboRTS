@@ -19,23 +19,29 @@ ChassisRotation::ChassisRotation() {
 		    auto q = odom->pose.pose.orientation;
 		    double roll, pitch, yaw;
 		    tf2::Matrix3x3{{q.x, q.y, q.z, q.w}}.getRPY(roll, pitch, yaw);
-		    double relative_angle = normalize_angle(yaw - initial_angle);
 
 		    switch (state) {
-		    case ACTIVE:
+
+		    case ACTIVE: {
+			    double relative_angle = normalize_angle(yaw - initial_angle);
 			    if (relative_angle <= angle_min) {
 				    angle_speed_ctrl = angle_speed;
 			    } else if (relative_angle >= angle_max) {
 				    angle_speed_ctrl = -angle_speed;
 			    }
-			    break;
-		    case INITIALIZING:
+		    }
+		    break;
+
+		    case INITIALIZING: {
 			    initial_angle = yaw;
 			    angle_speed_ctrl = angle_speed;
 			    state = ACTIVE;
-			    break;
+		    }
+		    break;
+
 		    case INACTIVE:
-			    return;
+		    return;
+
 		    }
 
 		    geometry_msgs::Twist ctrl;
