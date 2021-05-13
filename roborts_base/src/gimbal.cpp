@@ -77,6 +77,9 @@ void Gimbal::ROS_Init(){
   //ros subscriber
   ros_sub_cmd_gimbal_angle_ = ros_nh_.subscribe("cmd_gimbal_angle", 1, &Gimbal::GimbalAngleCtrlCallback, this);
 
+  //ros publisher
+  ros_pub_gimbal_info_ = ros_nh_.advertise<roborts_msgs::GimbalInfo>("gimbal_info", 1);
+
   //ros service
   ros_ctrl_fric_wheel_srv_ = ros_nh_.advertiseService("cmd_fric_wheel", &Gimbal::CtrlFricWheelService, this);
   ros_ctrl_shoot_srv_ = ros_nh_.advertiseService("cmd_shoot", &Gimbal::CtrlShootService, this);
@@ -99,6 +102,16 @@ void Gimbal::GimbalInfoCallback(const std::shared_ptr<roborts_sdk::cmd_gimbal_in
   pitch_tf_.header.stamp = current_time;
   pitch_tf_.transform.rotation = tf::createQuaternionMsgFromRollPitchYaw(0, gimbal_info->pitch_ecd_angle / 1800.0 * M_PI, 0);
   tf_broadcaster_.sendTransform(pitch_tf_);
+
+  roborts_msgs::GimbalInfo msg_gimbal_info;
+  msg_gimbal_info.mode = gimbal_info->mode;
+  msg_gimbal_info.pitch_ecd_angle = gimbal_info->pitch_ecd_angle / 1800.0 * M_PI;
+  msg_gimbal_info.yaw_ecd_angle = gimbal_info->yaw_ecd_angle / 1800.0 * M_PI;
+  msg_gimbal_info.pitch_gyro_angle = gimbal_info->pitch_gyro_angle / 1800.0 * M_PI;
+  msg_gimbal_info.yaw_gyro_angle = gimbal_info->yaw_gyro_angle / 1800.0 * M_PI;
+  msg_gimbal_info.yaw_rate = gimbal_info->yaw_rate / 1800.0 * M_PI;
+  msg_gimbal_info.pitch_rate = gimbal_info->pitch_rate / 1800.0 * M_PI;
+  ros_pub_gimbal_info_.publish(msg_gimbal_info);
 
 }
 

@@ -33,6 +33,7 @@
 #include "roborts_msgs/GimbalAngle.h"
 #include "roborts_msgs/ShootCmd.h"
 #include "roborts_msgs/FricWhl.h"
+#include "roborts_msgs/GimbalInfo.h"
 
 //! Referee System
 #include "roborts_msgs/GameResult.h"

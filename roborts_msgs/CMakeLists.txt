@@ -32,6 +32,7 @@ add_message_files(
         FILES
         GimbalAngle.msg
         YawFocus.msg
+        GimbalInfo.msg
 )
 
 # referee_system message

@@ -106,6 +106,8 @@ class Gimbal: public Module {
   //! ros yaw/pitch tf broadcaster
   tf::TransformBroadcaster        tf_broadcaster_;
 
+  ros::Publisher ros_pub_gimbal_info_;
+
 };
 REGISTER_MODULE(Module, "gimbal", Gimbal, std::shared_ptr<roborts_sdk::Handle>);
 }
