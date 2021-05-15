@@ -104,6 +104,8 @@ void Gimbal::GimbalInfoCallback(const std::shared_ptr<roborts_sdk::cmd_gimbal_in
   tf_broadcaster_.sendTransform(pitch_tf_);
 
   roborts_msgs::GimbalInfo msg_gimbal_info;
+  msg_gimbal_info.header.stamp = current_time;
+  msg_gimbal_info.header.frame_id = "base_link";
   msg_gimbal_info.mode = gimbal_info->mode;
   msg_gimbal_info.pitch_ecd_angle = gimbal_info->pitch_ecd_angle / 1800.0 * M_PI;
   msg_gimbal_info.yaw_ecd_angle = gimbal_info->yaw_ecd_angle / 1800.0 * M_PI;
