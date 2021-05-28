@@ -25,7 +25,7 @@ namespace roborts_base{
 struct Config {
   void GetParam() {
     ros::NodeHandle nh;
-    nh.param<std::string>("serial_port", serial_port, "/dev/ttyACM0");
+    nh.param<std::string>("serial_port", serial_port, "/dev/serial_sdk");
     nh.param<std::vector<std::string>>("load_module", load_module,
                                         {"chassis",
                                          "gimbal",
