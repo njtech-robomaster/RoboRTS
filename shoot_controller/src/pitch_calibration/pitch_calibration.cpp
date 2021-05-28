@@ -1,3 +1,4 @@
+#include <iostream>
 #include <roborts_msgs/GimbalAngle.h>
 #include <ros/ros.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
@@ -6,9 +7,9 @@
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "pitch_calibration");
 
-	double start = -.4;
-	double end = .4;
-	double step = .001;
+	double start = -.3;
+	double end = .3;
+	double step = .003;
 
 	double ctrl = NAN;
 
@@ -18,7 +19,7 @@ int main(int argc, char **argv) {
 	ros::Publisher pub =
 	    nh.advertise<roborts_msgs::GimbalAngle>("cmd_gimbal_angle", 1);
 
-	ros::Rate loop(10);
+	ros::Rate loop(4);
 	while (ros::ok()) {
 		ros::spinOnce();
 		loop.sleep();
@@ -38,7 +39,7 @@ int main(int argc, char **argv) {
 			auto q = transform.transform.rotation;
 			double roll, pitch, yaw;
 			tf2::Matrix3x3{{q.x, q.y, q.z, q.w}}.getRPY(roll, pitch, yaw);
-			ROS_INFO("ccc %lf %lf", ctrl, -pitch);
+			std::cout << ctrl << "," << -pitch << std::endl;
 			ctrl += step;
 		}
 
