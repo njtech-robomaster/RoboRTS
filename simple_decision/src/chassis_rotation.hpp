@@ -8,8 +8,8 @@ class ChassisRotation {
 	ChassisRotation();
 
 	double angle_min = -M_PI / 3;
-	double angle_max = M_PI / 6;
-	double angle_speed = 1.8;
+	double angle_max = M_PI / 3;
+	double angle_speed = 2.0;
 
 	void start();
 	void stop();
@@ -17,7 +17,8 @@ class ChassisRotation {
   private:
 	ros::Subscriber odom_sub;
 	ros::Publisher cmd_vel_pub;
-	double angle_speed_ctrl = 0;
+	double angle_speed_sig = 1;
+	double angle_speed_abs = 1;
 
 	enum State { INACTIVE, INITIALIZING, ACTIVE };
 	State state = INACTIVE;

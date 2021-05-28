@@ -11,6 +11,8 @@ double normalize_angle(double a) {
 	return a;
 }
 
+constexpr double initial_speed = 0.3;
+
 ChassisRotation::ChassisRotation() {
 	ros::NodeHandle nh;
 	cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
@@ -24,17 +26,21 @@ ChassisRotation::ChassisRotation() {
 
 		    case ACTIVE: {
 			    double relative_angle = normalize_angle(yaw - initial_angle);
+			    double t = (relative_angle - angle_min) / (angle_max - angle_min) * M_PI;
+
+			    angle_speed_abs = std::sin(t) * (1 - initial_speed) + initial_speed;
 			    if (relative_angle <= angle_min) {
-				    angle_speed_ctrl = angle_speed;
+				    angle_speed_sig = 1;
 			    } else if (relative_angle >= angle_max) {
-				    angle_speed_ctrl = -angle_speed;
+				    angle_speed_sig = -1;
 			    }
 		    }
 		    break;
 
 		    case INITIALIZING: {
 			    initial_angle = yaw;
-			    angle_speed_ctrl = angle_speed;
+			    angle_speed_sig = 1;
+			    angle_speed_abs = 1;
 			    state = ACTIVE;
 		    }
 		    break;
@@ -45,7 +51,7 @@ ChassisRotation::ChassisRotation() {
 		    }
 
 		    geometry_msgs::Twist ctrl;
-		    ctrl.angular.z = angle_speed_ctrl;
+		    ctrl.angular.z = angle_speed * angle_speed_abs * angle_speed_sig;
 		    cmd_vel_pub.publish(ctrl);
 	    });
 }
