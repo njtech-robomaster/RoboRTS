@@ -255,11 +255,8 @@ void ShootController::track_moving_reference(bool control_gimbal) {
 		return;
 	}
 
-	double moving_reference_duration = 2.0;
-	ros::param::getCached("~moving_reference_duration",
-	                      moving_reference_duration);
-	if (moving_reference.header.stamp +
-	        ros::Duration{moving_reference_duration} <
+	auto moving_reference_duration = tf_buffer.getCacheLength();
+	if (moving_reference.header.stamp + moving_reference_duration <
 	    ros::Time::now()) {
 		switch_moving_reference(control_gimbal);
 		return;
