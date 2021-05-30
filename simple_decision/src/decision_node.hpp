@@ -3,8 +3,10 @@
 #include "chassis_rotation.hpp"
 #include "geometry_msgs/Pose.h"
 #include "goal_executor.hpp"
+#include "lookout_adapter.hpp"
 #include <optional>
 #include <ros/ros.h>
+#include <tf2_ros/transform_listener.h>
 
 class DecisionNode {
   public:
@@ -14,7 +16,7 @@ class DecisionNode {
 	ChassisRotation self_rotation;
 	GoalExecutor goal_executor;
 
-	geometry_msgs::Pose boot_area;
+	std::string boot_area;
 	int bullet_area;
 	int hp_area;
 
@@ -32,8 +34,17 @@ class DecisionNode {
 	enum State { INIT, STAY_HOME, GOING_OUT, GOING_BACK };
 	State state;
 
+	LookoutAdapter lookout;
+
 	void control_loop();
 	void go_back_home();
 	bool try_goto_buff_zone();
 	void publish_focus_center(bool has_focus);
+
+	tf2_ros::Buffer tf_buffer;
+	tf2_ros::TransformListener tf_listener{tf_buffer};
+
+	bool is_being_besieged();
+	bool try_run_away();
+	int besieged_count = 0;
 };
