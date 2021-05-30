@@ -45,19 +45,11 @@ void GoalExecutor::goto_goal(geometry_msgs::Pose target,
 
 void GoalExecutor::goto_goal(geometry_msgs::Point target,
                              std::function<void(bool)> callback) {
-	geometry_msgs::Pose pose1;
-	pose1.position = target;
-	tf2::Quaternion q1;
-	q1.setRPY(0, 0, 0);
-	pose1.orientation = tf2::toMsg(q1);
+	geometry_msgs::Pose pose;
+	pose.position = target;
+	tf2::Quaternion q;
+	q.setRPY(0, 0, 0);
+	pose.orientation = tf2::toMsg(q);
 
-	goto_goal(pose1, [this, target, callback](bool) {
-		geometry_msgs::Pose pose2;
-		pose2.position = target;
-		tf2::Quaternion q2;
-		q2.setRPY(0, 0, M_PI);
-		pose2.orientation = tf2::toMsg(q2);
-
-		goto_goal(pose2, callback);
-	});
+	goto_goal(pose, callback);
 }
