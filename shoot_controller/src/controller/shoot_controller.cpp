@@ -308,6 +308,14 @@ bool ShootController::track_yaw_focus(
 	return true;
 }
 
+double norm_squared(const geometry_msgs::Point &p) {
+	return p.x * p.x + p.y * p.y + p.z * p.z;
+}
+
+double norm(const geometry_msgs::Point &p) {
+	return std::sqrt(norm_squared(p));
+}
+
 bool ShootController::track_enemy_cars() {
 	std::vector<geometry_msgs::Point> enemy_cars;
 	std::vector<geometry_msgs::Point> unknown_cars;
@@ -343,7 +351,7 @@ bool ShootController::track_enemy_cars() {
 		position.y = car.y;
 		geometry_msgs::Point relative_position;
 		tf2::doTransform(position, relative_position, transform);
-		if (position.x < 0) {
+		if (relative_position.x < 0 || norm(relative_position) < 0.3) {
 			continue;
 		}
 
@@ -361,8 +369,7 @@ bool ShootController::track_enemy_cars() {
 
 	std::sort(cars_to_track.begin(), cars_to_track.end(),
 	          [](geometry_msgs::Point &a, geometry_msgs::Point &b) {
-		          return a.x * a.x + a.y * a.y + a.z * a.z <
-		                 b.x * b.x + b.y * b.y + b.z * b.z;
+		          return norm_squared(a) < norm_squared(b);
 	          });
 	auto target = cars_to_track[0];
 
