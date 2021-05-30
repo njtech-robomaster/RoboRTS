@@ -323,8 +323,8 @@ bool ShootController::track_enemy_cars() {
 	} else if (team_color_str == "blue") {
 		my_color = VehicleColor::BLUE;
 	} else {
-		throw std::runtime_error("unrecognized team_color param: " +
-		                         team_color_str);
+		ROS_WARN("unrecognized team_color param: %s", team_color_str.c_str());
+		return false;
 	}
 
 	geometry_msgs::TransformStamped transform;
