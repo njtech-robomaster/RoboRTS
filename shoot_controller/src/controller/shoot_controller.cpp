@@ -10,7 +10,7 @@
 ShootController::ShootController()
     : has_last_target{false}, in_play{false}, heat{0}, heat_cooling_rate{0},
       heat_cooling_limit{0}, has_moving_reference{false},
-      tf_buffer{ros::Duration{10}}, tf_listener{tf_buffer} {
+      tf_buffer{ros::Duration{1.5}}, tf_listener{tf_buffer} {
 	ros::NodeHandle nh;
 	gimbal_pub = nh.advertise<roborts_msgs::GimbalAngle>("cmd_gimbal_angle", 1);
 
@@ -19,6 +19,7 @@ ShootController::ShootController()
 	ros::param::get("~fixed_frame", fixed_frame);
 	ros::param::get("~gun_barrel_length", gun_barrel_length);
 	ROS_INFO("Gun barrel length is %lf", gun_barrel_length);
+	ros::param::get("~lookout_frame", lookout_frame);
 
 	cmd_shoot = nh.serviceClient<roborts_msgs::ShootCmd>("cmd_shoot");
 
@@ -58,6 +59,10 @@ ShootController::ShootController()
 }
 
 bool filter_result(const geometry_msgs::Point &pos) {
+	if (pos.x < 0) {
+		return false;
+	}
+
 	double height_min = 0.0;
 	ros::param::getCached("~target_height_min", height_min);
 	if (pos.z < height_min)
@@ -84,14 +89,12 @@ bool filter_result(const geometry_msgs::Point &pos) {
 }
 
 void set_pitch(roborts_msgs::GimbalAngle &ctrl,
-               const geometry_msgs::PointStamped &target_in_pitch_base,
-               const geometry_msgs::PointStamped &target_in_yaw_base,
-               double bullet_velocity,
-               double gun_barrel_length) {
-	double distance =
-	    std::sqrt(target_in_yaw_base.point.x * target_in_yaw_base.point.x +
-	              target_in_yaw_base.point.y * target_in_yaw_base.point.y);
-	double height = target_in_pitch_base.point.z;
+               const geometry_msgs::Point &target_in_pitch_base,
+               const geometry_msgs::Point &target_in_yaw_base,
+               double bullet_velocity, double gun_barrel_length) {
+	double distance = std::sqrt(target_in_yaw_base.x * target_in_yaw_base.x +
+	                            target_in_yaw_base.y * target_in_yaw_base.y);
+	double height = target_in_pitch_base.z;
 	double pitch =
 	    compute_pitch(distance, height, gun_barrel_length, bullet_velocity);
 
@@ -106,10 +109,9 @@ void set_pitch(roborts_msgs::GimbalAngle &ctrl,
 }
 
 void set_yaw(roborts_msgs::GimbalAngle &ctrl,
-             const geometry_msgs::PointStamped &target_in_yaw_base) {
+             const geometry_msgs::Point &target_in_yaw_base) {
 	ctrl.yaw_mode = false;
-	ctrl.yaw_angle =
-	    std::atan2(target_in_yaw_base.point.y, target_in_yaw_base.point.x);
+	ctrl.yaw_angle = std::atan2(target_in_yaw_base.y, target_in_yaw_base.x);
 }
 
 bool ShootController::aim_and_shoot(
@@ -144,8 +146,8 @@ bool ShootController::aim_and_shoot(
 	}
 
 	roborts_msgs::GimbalAngle gimbal_ctrl;
-	set_yaw(gimbal_ctrl, target_in_yaw_base);
-	set_pitch(gimbal_ctrl, target_in_pitch_base, target_in_yaw_base,
+	set_yaw(gimbal_ctrl, target_in_yaw_base.point);
+	set_pitch(gimbal_ctrl, target_in_pitch_base.point, target_in_yaw_base.point,
 	          speed_monitor.get_current_bullet_velocity(), gun_barrel_length);
 
 	gimbal_pub.publish(gimbal_ctrl);
@@ -186,8 +188,8 @@ bool ShootController::track(const geometry_msgs::PointStamped &target_) {
 	}
 
 	roborts_msgs::GimbalAngle gimbal_ctrl;
-	set_yaw(gimbal_ctrl, target_in_yaw_base);
-	set_pitch(gimbal_ctrl, target_in_pitch_base, target_in_yaw_base,
+	set_yaw(gimbal_ctrl, target_in_yaw_base.point);
+	set_pitch(gimbal_ctrl, target_in_pitch_base.point, target_in_yaw_base.point,
 	          speed_monitor.get_current_bullet_velocity(), gun_barrel_length);
 
 	gimbal_pub.publish(gimbal_ctrl);
@@ -199,6 +201,7 @@ void ShootController::control_loop() {
 	bool use_moving_reference = false;
 	if (has_last_target) {
 		track(last_target);
+	} else if (track_enemy_cars()) {
 	} else if (yaw_focus.has_focus) {
 		track_yaw_focus(yaw_focus.focus_point);
 	} else {
@@ -273,7 +276,7 @@ void ShootController::track_moving_reference(bool control_gimbal) {
 	}
 
 	roborts_msgs::GimbalAngle gimbal_ctrl;
-	set_yaw(gimbal_ctrl, reference_in_yaw_base);
+	set_yaw(gimbal_ctrl, reference_in_yaw_base.point);
 
 	double angle_max = 1.0;
 	ros::param::getCached("~moving_reference_max_angle", angle_max);
@@ -301,7 +304,76 @@ bool ShootController::track_yaw_focus(
 	}
 
 	roborts_msgs::GimbalAngle gimbal_ctrl;
-	set_yaw(gimbal_ctrl, target_in_yaw_base);
+	set_yaw(gimbal_ctrl, target_in_yaw_base.point);
+	gimbal_ctrl.pitch_mode = false;
+	gimbal_ctrl.pitch_angle = 0;
+	gimbal_pub.publish(gimbal_ctrl);
+	return true;
+}
+
+bool ShootController::track_enemy_cars() {
+	std::vector<geometry_msgs::Point> enemy_cars;
+	std::vector<geometry_msgs::Point> unknown_cars;
+
+	VehicleColor my_color;
+	std::string team_color_str;
+	ros::param::getCached("team_color", team_color_str);
+	if (team_color_str == "red") {
+		my_color = VehicleColor::RED;
+	} else if (team_color_str == "blue") {
+		my_color = VehicleColor::BLUE;
+	} else {
+		throw std::runtime_error("unrecognized team_color param: " +
+		                         team_color_str);
+	}
+
+	geometry_msgs::TransformStamped transform;
+	try {
+		transform = tf_buffer.lookupTransform(yaw_base_frame, lookout_frame,
+		                                      ros::Time{0});
+	} catch (const std::exception &e) {
+		ROS_WARN("Couldn't lookup transform (lookout tracking): %s", e.what());
+		return false;
+	}
+
+	for (auto &car : lookout.get_cars()) {
+		if (car.color == my_color) {
+			continue;
+		}
+
+		geometry_msgs::Point position;
+		position.x = car.x;
+		position.y = car.y;
+		geometry_msgs::Point relative_position;
+		tf2::doTransform(position, relative_position, transform);
+		if (position.x < 0) {
+			continue;
+		}
+
+		if (car.color == VehicleColor::UNKNOWN) {
+			unknown_cars.push_back(relative_position);
+		} else {
+			enemy_cars.push_back(relative_position);
+		}
+	}
+
+	auto &cars_to_track = enemy_cars.empty() ? unknown_cars : enemy_cars;
+	if (cars_to_track.empty()) {
+		return false;
+	}
+
+	std::sort(cars_to_track.begin(), cars_to_track.end(),
+	          [](geometry_msgs::Point &a, geometry_msgs::Point &b) {
+		          return a.x * a.x + a.y * a.y + a.z * a.z <
+		                 b.x * b.x + b.y * b.y + b.z * b.z;
+	          });
+	auto target = cars_to_track[0];
+
+	ROS_INFO("Tracking lookout target at (relative) %lf, %lf", target.x,
+	         target.y);
+
+	roborts_msgs::GimbalAngle gimbal_ctrl;
+	set_yaw(gimbal_ctrl, target);
 	gimbal_ctrl.pitch_mode = false;
 	gimbal_ctrl.pitch_angle = 0;
 	gimbal_pub.publish(gimbal_ctrl);

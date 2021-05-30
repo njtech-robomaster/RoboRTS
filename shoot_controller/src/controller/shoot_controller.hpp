@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lookout_adapter.hpp"
 #include "speed_monitor.hpp"
 #include <geometry_msgs/PointStamped.h>
 #include <roborts_msgs/YawFocus.h>
@@ -14,6 +15,7 @@ class ShootController {
 	bool aim_and_shoot(const geometry_msgs::PointStamped &target);
 	bool track(const geometry_msgs::PointStamped &target);
 	bool track_yaw_focus(const geometry_msgs::PointStamped &target);
+	bool track_enemy_cars();
 	bool shoot();
 	void track_moving_reference(bool control_gimbal);
 	void switch_moving_reference(bool control_gimbal);
@@ -23,6 +25,7 @@ class ShootController {
 	std::string yaw_base_frame = "yaw_base_link";
 	std::string pitch_base_frame = "pitch_base_link";
 	double gun_barrel_length = 0.0;
+	std::string lookout_frame = "map";
 
 	bool has_last_target;
 	geometry_msgs::PointStamped last_target;
@@ -48,4 +51,5 @@ class ShootController {
 	tf2_ros::Buffer tf_buffer;
 	tf2_ros::TransformListener tf_listener;
 	ros::Timer control_loop_timer;
+	LookoutAdapter lookout;
 };
