@@ -231,7 +231,7 @@ bool DecisionNode::is_being_besieged() {
 	p0.header.stamp = ros::Time{0};
 	geometry_msgs::PointStamped my_pos;
 	try {
-		my_pos = tf_buffer.transform(p0, "map");
+		tf_buffer.transform(p0, "map");
 	} catch (const std::exception &e) {
 		ROS_WARN("Couldn't lookup transform (is_being_besieged): %s", e.what());
 		return false;
@@ -255,7 +255,7 @@ bool DecisionNode::is_being_besieged() {
 		}
 	}
 
-	if (enemy_count_in_my_part >= 2) {
+	if (enemy_count_in_my_part > 2) {
 		auto &car1 = enemy_cars[0];
 		auto &car2 = enemy_cars[1];
 		auto their_distance = std::sqrt(std::pow(car1.x - car2.x, 2) +
