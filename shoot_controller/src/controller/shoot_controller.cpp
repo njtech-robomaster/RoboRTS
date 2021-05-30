@@ -320,8 +320,15 @@ bool ShootController::track_enemy_cars() {
 	std::vector<geometry_msgs::Point> enemy_cars;
 	std::vector<geometry_msgs::Point> unknown_cars;
 
-	auto my_color = get_my_vehicle_color();
-	if (!my_color.has_value()){
+	VehicleColor my_color;
+	std::string team_color_str;
+	ros::param::getCached("team_color", team_color_str);
+	if (team_color_str == "red") {
+		my_color = VehicleColor::RED;
+	} else if (team_color_str == "blue") {
+		my_color = VehicleColor::BLUE;
+	} else {
+		ROS_WARN("unrecognized team_color param: %s", team_color_str.c_str());
 		return false;
 	}
 
@@ -335,7 +342,7 @@ bool ShootController::track_enemy_cars() {
 	}
 
 	for (auto &car : lookout.get_cars()) {
-		if (car.color == my_color.value()) {
+		if (car.color == my_color) {
 			continue;
 		}
 

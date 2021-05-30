@@ -61,16 +61,3 @@ std::vector<Vehicle> LookoutAdapter::get_cars() {
 	}
 	return lookout_data;
 }
-
-std::optional<VehicleColor> get_my_vehicle_color() {
-	std::string team_color_str;
-	ros::param::getCached("team_color", team_color_str);
-	if (team_color_str == "red") {
-		return VehicleColor::RED;
-	} else if (team_color_str == "blue") {
-		return VehicleColor::BLUE;
-	} else {
-		ROS_WARN("unrecognized team_color param: %s", team_color_str.c_str());
-		return std::nullopt;
-	}
-}

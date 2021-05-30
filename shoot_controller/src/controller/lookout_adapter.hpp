@@ -1,7 +1,6 @@
 #pragma once
 
 #include <geometry_msgs/PointStamped.h>
-#include <optional>
 #include <ros/ros.h>
 
 enum class VehicleColor { RED, BLUE, UNKNOWN };
@@ -11,8 +10,6 @@ class Vehicle {
 	double x;
 	double y;
 };
-
-std::optional<VehicleColor> get_my_vehicle_color();
 
 class LookoutAdapter {
   public:
