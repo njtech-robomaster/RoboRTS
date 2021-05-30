@@ -36,14 +36,14 @@ geometry_msgs::Point get_buff_zone_location(int id) {
 	case 5:
 		return Goals::F6;
 	default:
-		throw std::invalid_argument("invalid buff zone id: " + id);
+		throw std::invalid_argument("invalid buff zone id: " + std::to_string(id));
 	}
 }
 
 DecisionNode::DecisionNode()
     : boot_area{get_boot_area()}, bullet_area{-1}, hp_area{-1}, in_play{false},
-      need_hp_buff{false}, state{INIT}, is_another_dead{false}, can_attack{
-                                                                    false} {
+      need_hp_buff{false}, can_attack{false},
+      is_another_dead{false}, state{INIT} {
 	ros::NodeHandle nh;
 
 	game_zone_sub = nh.subscribe<roborts_msgs::GameZoneArray>(
