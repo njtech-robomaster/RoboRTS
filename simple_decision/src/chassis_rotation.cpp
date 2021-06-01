@@ -11,7 +11,7 @@ double normalize_angle(double a) {
 	return a;
 }
 
-constexpr double initial_speed = 0.3;
+constexpr double initial_speed = 0.5;
 
 ChassisRotation::ChassisRotation() {
 	ros::NodeHandle nh;

@@ -9,7 +9,7 @@ class ChassisRotation {
 
 	double angle_min = -M_PI / 3;
 	double angle_max = M_PI / 3;
-	double angle_speed = 3.0;
+	double angle_speed = 4.0;
 
 	bool start();
 	bool stop();
