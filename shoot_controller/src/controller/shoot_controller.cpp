@@ -59,7 +59,7 @@ ShootController::ShootController()
 }
 
 bool filter_result(const geometry_msgs::Point &pos) {
-	if (pos.x < 0) {
+	if (pos.x < -1.0) {
 		return false;
 	}
 
