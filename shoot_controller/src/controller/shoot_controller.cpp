@@ -351,7 +351,7 @@ bool ShootController::track_enemy_cars() {
 		position.y = car.y;
 		geometry_msgs::Point relative_position;
 		tf2::doTransform(position, relative_position, transform);
-		if (relative_position.x < 0 || norm(relative_position) < 0.3) {
+		if (relative_position.x < -1.0 || norm(relative_position) < 0.3) {
 			continue;
 		}
 
