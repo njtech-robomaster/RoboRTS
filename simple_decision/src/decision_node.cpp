@@ -206,7 +206,10 @@ void DecisionNode::control_loop() {
 	bool focus_map_center = false;
 
 	if (state == INIT) {
-		go_back_home();
+		bool go_out = try_goto_buff_zone();
+		if (!go_out) {
+			go_back_home();
+		}
 	} else if (state == STAY_HOME) {
 		bool go_out = try_goto_buff_zone();
 		if (!go_out) {
