@@ -362,7 +362,7 @@ bool ShootController::track_enemy_cars() {
 		}
 	}
 
-	auto &cars_to_track = enemy_cars.empty() ? unknown_cars : enemy_cars;
+	auto &cars_to_track = enemy_cars;
 	if (cars_to_track.empty()) {
 		return false;
 	}
