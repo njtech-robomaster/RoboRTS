@@ -10,7 +10,7 @@
 ShootController::ShootController()
     : has_last_target{false}, in_play{false}, heat{0}, heat_cooling_rate{0},
       heat_cooling_limit{0}, has_moving_reference{false},
-      tf_buffer{ros::Duration{1.0}}, tf_listener{tf_buffer} {
+      tf_buffer{ros::Duration{5.0}}, tf_listener{tf_buffer} {
 	ros::NodeHandle nh;
 	gimbal_pub = nh.advertise<roborts_msgs::GimbalAngle>("cmd_gimbal_angle", 1);
 
