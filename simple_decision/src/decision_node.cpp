@@ -21,7 +21,7 @@ geometry_msgs::Pose get_boot_area() {
 	throw std::invalid_argument("boot_area not set");
 }
 
-geometry_msgs::Point get_buff_zone_location(int id) {
+geometry_msgs::Pose get_buff_zone_location(int id) {
 	switch (id) {
 	case 0:
 		return Goals::F1;
