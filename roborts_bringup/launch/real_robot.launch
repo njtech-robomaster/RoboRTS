@@ -42,7 +42,8 @@
 	<node name="fric_wheel_control" pkg="shoot_controller" type="fric_wheel_control" output="screen" />
 
 	<node name="simple_decision" pkg="simple_decision" type="simple_decision" output="screen">
-		<param name="boot_area" value="$(arg boot_area)" />
+		<param name="boot_area" value="c3" if="$(eval robot_id == 1)" />
+		<param name="boot_area" value="c4" if="$(eval robot_id == 2)" />
 	</node>
 
 	<node pkg="tf2_ros" type="static_transform_publisher" name="laser_link_broadcaster"
