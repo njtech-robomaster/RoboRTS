@@ -71,7 +71,7 @@ geometry_msgs::Pose DecisionNode::get_buff_zone_location(int id) {
 DecisionNode::DecisionNode()
     : boot_area{get_boot_area_setting()}, bullet_area{-1}, hp_area{-1}, in_play{false},
       need_hp_buff{false}, can_attack{false},
-      is_another_dead{false}, state{INIT} {
+      is_another_dead{false}, go_back_home_try_count{0}, state{INIT} {
 	ros::NodeHandle nh;
 
 	game_zone_sub = nh.subscribe<roborts_msgs::GameZoneArray>(
@@ -177,9 +177,17 @@ void DecisionNode::go_back_home() {
 		if (success) {
 			ROS_INFO("Arrived home!");
 			state = STAY_HOME;
+			go_back_home_try_count = 0;
 		} else {
-			ROS_INFO("Couldn't go back home, try again!");
-			go_back_home();
+			go_back_home_try_count++;
+			if (go_back_home_try_count >= 10){
+				go_back_home_try_count = 0;
+				ROS_INFO("Couldn't go back home, switch home!");
+				switch_home();
+			} else {
+				ROS_INFO("Couldn't go back home, try again! (times: %d)", go_back_home_try_count);
+				go_back_home();
+			}
 		}
 	});
 }
@@ -256,4 +264,23 @@ void DecisionNode::control_loop() {
 	}
 
 	publish_focus_center(focus_map_center);
+}
+
+void DecisionNode::switch_home(){
+	std::string new_home;
+	if (boot_area == "c1") {
+		new_home = "c3";
+	} else if (boot_area == "c2") {
+		new_home = "c4";
+	} else if (boot_area == "c3") {
+		new_home = "c1";
+	} else if (boot_area == "c4") {
+		new_home = "c2";
+	} else {
+		ROS_WARN("unrecognized boot area: %s", boot_area.c_str());
+		return;
+	}
+
+	boot_area = new_home;
+	go_back_home();
 }

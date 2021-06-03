@@ -28,6 +28,7 @@ class DecisionNode {
 	bool need_hp_buff;
 	bool can_attack;
 	bool is_another_dead;
+	int go_back_home_try_count;
 
 	enum State { INIT, STAY_HOME, GOING_OUT, GOING_BACK };
 	State state;
@@ -37,4 +38,6 @@ class DecisionNode {
 	bool try_goto_buff_zone();
 	void publish_focus_center(bool has_focus);
 	geometry_msgs::Pose get_buff_zone_location(int id);
+
+	void switch_home();
 };
