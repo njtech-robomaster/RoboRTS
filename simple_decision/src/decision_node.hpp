@@ -36,4 +36,5 @@ class DecisionNode {
 	void go_back_home();
 	bool try_goto_buff_zone();
 	void publish_focus_center(bool has_focus);
+	geometry_msgs::Pose get_buff_zone_location(int id);
 };

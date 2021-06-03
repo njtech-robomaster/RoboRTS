@@ -26,23 +26,46 @@ geometry_msgs::Pose get_boot_area_location(const std::string& name){
 	throw std::invalid_argument("boot_area unrecognized");
 }
 
-geometry_msgs::Pose get_buff_zone_location(int id) {
+geometry_msgs::Pose DecisionNode::get_buff_zone_location(int id) {
+	double buff_zone_orientation = 0;
+	if (boot_area == "c1" || boot_area == "c2"){
+		buff_zone_orientation = 0;
+	}else if (boot_area == "c3" || boot_area == "c4"){
+		buff_zone_orientation = M_PI;
+	}
+
+	geometry_msgs::Point pt;
 	switch (id) {
 	case 0:
-		return Goals::F1;
+		buff_zone_orientation = 0;
+		pt = Goals::F1;
+		break;
 	case 1:
-		return Goals::F2;
+		pt = Goals::F2;
+		break;
 	case 2:
-		return Goals::F3;
+		pt = Goals::F3;
+		break;
 	case 3:
-		return Goals::F4;
+		pt = Goals::F4;
+		break;
 	case 4:
-		return Goals::F5;
+		pt = Goals::F5;
+		break;
 	case 5:
-		return Goals::F6;
+		buff_zone_orientation = M_PI;
+		pt = Goals::F6;
+		break;
 	default:
 		throw std::invalid_argument("invalid buff zone id: " + std::to_string(id));
 	}
+
+	geometry_msgs::Pose pose;
+	pose.position = pt;
+	tf2::Quaternion q;
+	q.setRPY(0, 0, buff_zone_orientation);
+	pose.orientation = tf2::toMsg(q);
+	return pose;
 }
 
 DecisionNode::DecisionNode()

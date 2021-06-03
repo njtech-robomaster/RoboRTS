@@ -24,13 +24,18 @@ const geometry_msgs::Pose C2 = pose(-3.54, -1.74 + fix, M_PI / 2 + angle_fix);
 const geometry_msgs::Pose C3 = pose(3.54 - fix2, -1.74, M_PI + angle_fix2);
 const geometry_msgs::Pose C4 = pose(3.54, 1.74 - fix, -M_PI / 2 + angle_fix);
 
-const double buff_zone_orientation = M_PI;
+geometry_msgs::Point point(double x, double y) {
+	geometry_msgs::Point it;
+	it.x = x;
+	it.y = y;
+	return it;
+}
 
-const geometry_msgs::Pose F1 = pose(-3.54, 0.55, 0);
-const geometry_msgs::Pose F2 = pose(-2.14, -0.59, buff_zone_orientation);
-const geometry_msgs::Pose F3 = pose(0, 1.795, buff_zone_orientation);
-const geometry_msgs::Pose F4 = pose(0, -1.795, buff_zone_orientation);
-const geometry_msgs::Pose F5 = pose(2.14, 0.59, buff_zone_orientation);
-const geometry_msgs::Pose F6 = pose(3.54, -0.55, M_PI);
+const geometry_msgs::Point F1 = point(-3.54, 0.55);
+const geometry_msgs::Point F2 = point(-2.14, -0.59);
+const geometry_msgs::Point F3 = point(0, 1.795);
+const geometry_msgs::Point F4 = point(0, -1.795);
+const geometry_msgs::Point F5 = point(2.14, 0.59);
+const geometry_msgs::Point F6 = point(3.54, -0.55);
 
 }; // namespace Goals
