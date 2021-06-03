@@ -6,9 +6,14 @@
 #include <roborts_msgs/RobotStatus.h>
 #include <roborts_msgs/YawFocus.h>
 
-geometry_msgs::Pose get_boot_area() {
+std::string get_boot_area_setting() {
 	std::string name;
 	ros::param::get("~boot_area", name);
+	return name;
+
+}
+
+geometry_msgs::Pose get_boot_area_location(const std::string& name){
 	if (name == "c1") {
 		return Goals::C1;
 	} else if (name == "c2") {
@@ -18,7 +23,7 @@ geometry_msgs::Pose get_boot_area() {
 	} else if (name == "c4") {
 		return Goals::C4;
 	}
-	throw std::invalid_argument("boot_area not set");
+	throw std::invalid_argument("boot_area unrecognized");
 }
 
 geometry_msgs::Pose get_buff_zone_location(int id) {
@@ -41,7 +46,7 @@ geometry_msgs::Pose get_buff_zone_location(int id) {
 }
 
 DecisionNode::DecisionNode()
-    : boot_area{get_boot_area()}, bullet_area{-1}, hp_area{-1}, in_play{false},
+    : boot_area{get_boot_area_setting()}, bullet_area{-1}, hp_area{-1}, in_play{false},
       need_hp_buff{false}, can_attack{false},
       is_another_dead{false}, state{INIT} {
 	ros::NodeHandle nh;
@@ -145,7 +150,7 @@ DecisionNode::DecisionNode()
 void DecisionNode::go_back_home() {
 	ROS_INFO("Going back home");
 	state = GOING_BACK;
-	goal_executor.goto_goal(boot_area, [this](bool success) {
+	goal_executor.goto_goal(get_boot_area_location(boot_area), [this](bool success) {
 		if (success) {
 			ROS_INFO("Arrived home!");
 			state = STAY_HOME;

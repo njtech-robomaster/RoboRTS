@@ -14,7 +14,7 @@ class DecisionNode {
 	ChassisRotation self_rotation;
 	GoalExecutor goal_executor;
 
-	geometry_msgs::Pose boot_area;
+	std::string boot_area;
 	int bullet_area;
 	int hp_area;
 
