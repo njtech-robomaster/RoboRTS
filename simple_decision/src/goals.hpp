@@ -26,11 +26,11 @@ const geometry_msgs::Pose C4 = pose(3.54, 1.74 - fix, -M_PI / 2 + angle_fix);
 
 const double buff_zone_orientation = M_PI;
 
-const geometry_msgs::Pose F1 = pose(-3.54, 0.55, buff_zone_orientation);
+const geometry_msgs::Pose F1 = pose(-3.54, 0.55, 0);
 const geometry_msgs::Pose F2 = pose(-2.14, -0.59, buff_zone_orientation);
 const geometry_msgs::Pose F3 = pose(0, 1.795, buff_zone_orientation);
 const geometry_msgs::Pose F4 = pose(0, -1.795, buff_zone_orientation);
 const geometry_msgs::Pose F5 = pose(2.14, 0.59, buff_zone_orientation);
-const geometry_msgs::Pose F6 = pose(3.54, -0.55, buff_zone_orientation);
+const geometry_msgs::Pose F6 = pose(3.54, -0.55, M_PI);
 
 }; // namespace Goals
